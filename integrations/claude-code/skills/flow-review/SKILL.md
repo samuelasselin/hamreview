@@ -33,7 +33,7 @@ Review the code you just wrote WITH the human before building further on it, org
    }
    ```
    `ranges` are 1-indexed inclusive `[start, end]` line ranges in the NEW file. Set `"complete": false` for a flow that is only partially built so far.
-5. **Open the review (this blocks your turn):** run `flowreview handoff.json`. Your turn blocks until the human submits in their browser; then `feedback.json` is written next to `handoff.json`.
+5. **Open the review (this blocks your turn):** run `flowreview handoff.json` from the repo root. Your turn blocks until the human submits in their browser; then `feedback.json` is written to your current directory (the directory you run `flowreview` from — the repo root in this workflow).
 6. **Act on the feedback.** Read `feedback.json`:
    - Per flow `verdict`: `changes-requested` → address its comments before proceeding; `approved` → the human owns this slice.
    - Per comment `intent`: `must-fix` → make the change; `question` → answer it (and change if warranted); `nit` → optional.
