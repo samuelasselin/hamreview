@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import open from "open";
 import { parseHandoff } from "./core/index";
 import { findFreePort, waitForFile, waitForUrl } from "./server/net";
+import { packageRootFrom } from "./server/paths";
 
 async function main(): Promise<void> {
   const handoffArg = process.argv[2];
@@ -22,7 +23,9 @@ async function main(): Promise<void> {
   const donePath = join(work, ".done");
   const port = await findFreePort();
 
+  const packageRoot = packageRootFrom(import.meta.url);
   const server = spawn("npx", ["next", "start", "-p", String(port)], {
+    cwd: packageRoot,
     stdio: "inherit",
     env: {
       ...process.env,
