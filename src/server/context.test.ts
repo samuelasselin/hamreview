@@ -36,7 +36,7 @@ afterAll(() => rmSync(repo, { recursive: true, force: true }));
 
 describe("readEnv", () => {
   it("throws when a variable is missing", () => {
-    expect(() => readEnv({})).toThrow(/FLOWREVIEW_HANDOFF/);
+    expect(() => readEnv({} as NodeJS.ProcessEnv)).toThrow(/FLOWREVIEW_HANDOFF/);
   });
 });
 

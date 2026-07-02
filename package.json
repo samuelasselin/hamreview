@@ -13,6 +13,9 @@
     "typecheck": "tsc --noEmit",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit"
   },
+  "bin": {
+    "flowreview": "bin/flowreview.mjs"
+  },
   "engines": {
     "node": ">=20"
   },
