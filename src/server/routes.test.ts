@@ -73,5 +73,7 @@ describe("POST /api/feedback", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty("error");
   });
 });

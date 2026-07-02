@@ -22,11 +22,16 @@ interface ReviewModel {
 export default function Home() {
   const [model, setModel] = useState<ReviewModel | null>(null);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/review")
-      .then((r) => r.json())
-      .then((d) => setModel(d.model));
+      .then((r) => {
+        if (!r.ok) throw new Error(`review request failed (${r.status})`);
+        return r.json();
+      })
+      .then((d) => setModel(d.model))
+      .catch(() => setError("Failed to load the review."));
   }, []);
 
   async function submit() {
@@ -36,10 +41,16 @@ export default function Home() {
       flows: (model?.flows ?? []).map((f) => ({ id: f.id, verdict: "approved" as const })),
       comments: [],
     };
-    await fetch("/api/feedback", { method: "POST", body: JSON.stringify(feedback) });
-    setSent(true);
+    try {
+      const res = await fetch("/api/feedback", { method: "POST", body: JSON.stringify(feedback) });
+      if (res.ok) setSent(true);
+      else setError("Failed to send feedback.");
+    } catch {
+      setError("Failed to send feedback.");
+    }
   }
 
+  if (error) return <main className="p-8 text-red-700">{error}</main>;
   if (!model) return <main className="p-8">Loading review…</main>;
   if (sent) return <main className="p-8">Feedback sent. You can close this tab.</main>;
 
@@ -50,7 +61,7 @@ export default function Home() {
         <section key={flow.id} className="mb-8">
           <h2 className="mb-2 text-xl font-semibold">{flow.title}</h2>
           {flow.steps.map((step, i) => (
-            <div key={i} className="mb-3 rounded border border-gray-300">
+            <div key={`${step.path}-${i}`} className="mb-3 rounded border border-gray-300">
               <div className="bg-gray-100 px-3 py-1 text-sm">
                 {step.role} · {step.path}
               </div>
