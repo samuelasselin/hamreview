@@ -115,12 +115,14 @@ The handshake that makes blocking checkpoints work is two files plus a git diff 
 
 ## Architecture
 
-An **agent-agnostic core** plus a **thin Claude Code integration**:
+Finalized stack (decided at planning): **TypeScript** throughout; a **pure, framework-agnostic core**; a **Next.js** app (App Router) for the local server + review UI, styled with **Tailwind CSS v4** and **Flowbite React**; a thin **CLI**; and a **Claude Code integration**.
 
-- **Core** — a local HTTP server that serves the static browser review UI, reads `handoff.json`, runs the git-diff reconciliation, blocks until the reviewer submits, and writes `feedback.json`. The JSON contract is the only interface, so any agent can target it.
-- **Claude Code integration** — a small skill/command that wires the agent to the core (writes the handoff, invokes the tool, reads the feedback), Plannotator-style. First consumer, not a dependency of the core.
+- **Core** (pure TS, no framework, no DOM) — the contract types + validation, git-diff parsing, git↔handoff reconciliation (Leftovers/stale), enclosing-context extraction, and the review view-model builder. Depends on nothing; fully unit-tested. This is the agent-agnostic heart.
+- **App** (Next.js, App Router) — imports the core. Route handlers expose the reconciled review-model (`GET`) and accept the review result (`POST`, which validates and writes `feedback.json`). The App Router UI implements the focus-mode review surface with Tailwind + Flowbite React.
+- **CLI** (`flowreview <handoff.json>`) — reads the handoff, boots the local Next server on an ephemeral port, opens the browser, **blocks** until feedback is written, then exits. The two-file JSON contract + `git diff` remains the only interface, so any agent can drive it.
+- **Claude Code integration** — a small skill/command that wires the agent to the CLI (writes the handoff, invokes it, reads the feedback), Plannotator-style. First consumer, not a dependency of the core.
 
-*Language/framework is intentionally deferred to the planning phase.*
+Implementation is decomposed into a 4-plan sequence: **(1) core**, **(2) Next.js app + CLI round-trip**, **(3) the review UI surface**, **(4) Claude Code integration**.
 
 ## Error handling
 
