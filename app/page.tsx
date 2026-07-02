@@ -25,18 +25,26 @@ export default function Home() {
   }, []);
 
   async function send() {
-    const res = await fetch("/api/feedback", {
-      method: "POST",
-      body: JSON.stringify(toFeedback(state, new Date().toISOString())),
-    });
-    if (res.ok) setStatus("sent");
-    else setError("Failed to send feedback.");
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        body: JSON.stringify(toFeedback(state, new Date().toISOString())),
+      });
+      if (res.ok) setStatus("sent");
+      else setError("Failed to send feedback.");
+    } catch {
+      setError("Failed to send feedback.");
+    }
   }
 
   async function abort() {
-    const res = await fetch("/api/abort", { method: "POST" });
-    if (res.ok) setStatus("aborted");
-    else setError("Failed to abort.");
+    try {
+      const res = await fetch("/api/abort", { method: "POST" });
+      if (res.ok) setStatus("aborted");
+      else setError("Failed to abort.");
+    } catch {
+      setError("Failed to abort.");
+    }
   }
 
   if (error) return <main className="p-8 text-red-700">{error}</main>;
