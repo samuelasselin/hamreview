@@ -1,8 +1,8 @@
 import type { LineRange } from "./types";
 
 /** Leading-whitespace width of a line, or null for a blank line. */
-function indentOf(line: string): number | null {
-  if (line.trim() === "") return null;
+function indentOf(line: string | undefined): number | null {
+  if (line === undefined || line.trim() === "") return null;
   const m = /^[ \t]*/.exec(line);
   return m ? m[0].length : 0;
 }

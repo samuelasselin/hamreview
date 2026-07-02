@@ -37,4 +37,12 @@ describe("enclosingContext", () => {
     expect(s).toBeLessThanOrEqual(2);
     expect(e).toBeGreaterThanOrEqual(3);
   });
+
+  it("does not crash when the range exceeds the file length", () => {
+    const lines = ["class A", "  def m", "    x = 1", "  end", "end"];
+    expect(() => enclosingContext(lines, [99, 99])).not.toThrow();
+    const [s, e] = enclosingContext(lines, [99, 99]);
+    expect(s).toBeGreaterThanOrEqual(1);
+    expect(e).toBeLessThanOrEqual(lines.length);
+  });
 });

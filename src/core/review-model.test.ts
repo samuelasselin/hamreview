@@ -81,4 +81,45 @@ describe("buildReviewModel", () => {
   it("carries feature label through", () => {
     expect(buildReviewModel(handoff, diff, readFile).feature).toBe("Bookings");
   });
+
+  it("passes leftovers through as LeftoverView[]", () => {
+    const read: FileReader = () => ["class A", "  x", "  y = 1", "end"];
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[3, 3]], role: "model" }] }],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [3, 9] }] };
+    expect(buildReviewModel(h, d, read).leftovers).toEqual([{ path: "a.rb", ranges: [[9, 9]] }]);
+  });
+
+  it("does not collapse non-overlapping ranges in the same file across flows", () => {
+    const read: FileReader = () => ["a1", "a2", "a3", "a4"];
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [
+        { id: "one", title: "One", steps: [{ path: "a.rb", ranges: [[3, 3]], role: "model" }] },
+        { id: "two", title: "Two", steps: [{ path: "a.rb", ranges: [[1, 1]], role: "model" }] },
+      ],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [1, 3] }] };
+    const model = buildReviewModel(h, d, read);
+    expect(model.flows[1].steps[0].collapsed).toBe(false);
+    expect(model.flows[1].steps[0].alreadyReviewedIn).toBeUndefined();
+  });
+
+  it("marks a step stale when it references a line not in the diff", () => {
+    const read: FileReader = () => ["class A", "  def m", "    x = 1", "  end", "end"];
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[5, 5]], role: "model" }] }],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [3] }] };
+    expect(buildReviewModel(h, d, read).flows[0].steps[0].stale).toBe(true);
+  });
 });

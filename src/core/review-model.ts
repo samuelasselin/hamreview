@@ -43,6 +43,7 @@ export interface ReviewModel {
 export type FileReader = (path: string) => string[];
 
 function hull(ranges: LineRange[]): LineRange {
+  if (ranges.length === 0) return [1, 1];
   let s = Infinity;
   let e = -Infinity;
   for (const [a, b] of ranges) {
