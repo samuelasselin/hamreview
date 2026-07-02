@@ -1,7 +1,6 @@
-import { readFileSync, rmSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, rmSync, existsSync, mkdtempSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { mkdtempSync } from "node:fs";
 import { spawn } from "node:child_process";
 import open from "open";
 import { parseHandoff } from "./core/index";
@@ -13,7 +12,8 @@ async function main(): Promise<void> {
     console.error("usage: flowreview <handoff.json>");
     process.exit(2);
   }
-  const handoffPath = join(process.cwd(), handoffArg);
+  // resolve() handles both an absolute path and a cwd-relative one.
+  const handoffPath = resolve(handoffArg);
   // Validate early so a bad handoff fails before booting anything.
   parseHandoff(readFileSync(handoffPath, "utf8"));
 
@@ -32,27 +32,28 @@ async function main(): Promise<void> {
     },
   });
 
-  const url = `http://localhost:${port}`;
-  const ready = await waitForUrl(url, 30000);
-  if (!ready) {
-    server.kill();
-    console.error("server did not start in time");
+  try {
+    const url = `http://localhost:${port}`;
+    const ready = await waitForUrl(url, 30000);
+    if (!ready) {
+      console.error("server did not start in time");
+      process.exit(1);
+    }
+
+    console.log(`FlowReview open at ${url} — review, then submit in the browser.`);
+    await open(url);
+
+    const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
+    if (done && existsSync(feedbackOut)) {
+      console.log(`feedback written to ${feedbackOut}`);
+      process.exit(0);
+    }
+    console.error("review was not submitted (browser closed?)");
     process.exit(1);
+  } finally {
+    server.kill();
+    rmSync(work, { recursive: true, force: true });
   }
-
-  console.log(`FlowReview open at ${url} — review, then submit in the browser.`);
-  await open(url);
-
-  const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
-  server.kill();
-  rmSync(work, { recursive: true, force: true });
-
-  if (done && existsSync(feedbackOut)) {
-    console.log(`feedback written to ${feedbackOut}`);
-    process.exit(0);
-  }
-  console.error("review was not submitted (browser closed?)");
-  process.exit(1);
 }
 
 main().catch((e) => {
