@@ -1,7 +1,12 @@
 import type { Handoff, HandoffFlow, HandoffStep, LineRange } from "./types";
 import { isObject } from "./internal";
 
-export class HandoffValidationError extends Error {}
+export class HandoffValidationError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "HandoffValidationError";
+  }
+}
 
 export function parseHandoff(input: string | unknown): Handoff {
   const data = typeof input === "string" ? safeJson(input) : input;
