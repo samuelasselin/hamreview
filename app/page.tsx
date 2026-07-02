@@ -2,26 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "flowbite-react";
-
-interface StepView {
-  path: string;
-  role: string;
-  lines: { number: number; text: string; kind: "added" | "context" }[];
-}
-interface FlowView {
-  id: string;
-  title: string;
-  steps: StepView[];
-}
-interface ReviewModel {
-  feature?: string;
-  flows: FlowView[];
-  leftovers: { path: string; ranges: [number, number][] }[];
-}
+import type { ReviewComment, ReviewModel, Verdict } from "../src/core/index";
+import { FlowRail } from "./components/FlowRail";
+import { FlowStep } from "./components/FlowStep";
+import { addComment, allFlowsDecided, emptyReviewState, setVerdict, toFeedback, type ReviewState } from "./lib/review-state";
 
 export default function Home() {
   const [model, setModel] = useState<ReviewModel | null>(null);
-  const [sent, setSent] = useState(false);
+  const [state, setState] = useState<ReviewState>(emptyReviewState);
+  const [current, setCurrent] = useState(0);
+  const [status, setStatus] = useState<"reviewing" | "sent" | "aborted">("reviewing");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,52 +24,79 @@ export default function Home() {
       .catch(() => setError("Failed to load the review."));
   }, []);
 
-  async function submit() {
-    const feedback = {
-      version: 1,
-      submittedAt: new Date().toISOString(),
-      flows: (model?.flows ?? []).map((f) => ({ id: f.id, verdict: "approved" as const })),
-      comments: [],
-    };
-    try {
-      const res = await fetch("/api/feedback", { method: "POST", body: JSON.stringify(feedback) });
-      if (res.ok) setSent(true);
-      else setError("Failed to send feedback.");
-    } catch {
-      setError("Failed to send feedback.");
-    }
+  async function send() {
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      body: JSON.stringify(toFeedback(state, new Date().toISOString())),
+    });
+    if (res.ok) setStatus("sent");
+    else setError("Failed to send feedback.");
+  }
+
+  async function abort() {
+    const res = await fetch("/api/abort", { method: "POST" });
+    if (res.ok) setStatus("aborted");
+    else setError("Failed to abort.");
   }
 
   if (error) return <main className="p-8 text-red-700">{error}</main>;
   if (!model) return <main className="p-8">Loading review…</main>;
-  if (sent) return <main className="p-8">Feedback sent. You can close this tab.</main>;
+  if (status === "sent") return <main className="p-8">Feedback sent. You can close this tab.</main>;
+  if (status === "aborted") return <main className="p-8">Review aborted. You can close this tab.</main>;
+
+  const flow = model.flows[current];
+  const decided = allFlowsDecided(model, state);
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <h1 className="mb-6 text-2xl font-bold">{model.feature ?? "Review"}</h1>
-      {model.flows.map((flow) => (
-        <section key={flow.id} className="mb-8">
-          <h2 className="mb-2 text-xl font-semibold">{flow.title}</h2>
-          {flow.steps.map((step, i) => (
-            <div key={`${step.path}-${i}`} className="mb-3 rounded border border-gray-300">
-              <div className="bg-gray-100 px-3 py-1 text-sm">
-                {step.role} · {step.path}
-              </div>
-              <pre className="overflow-x-auto p-3 text-sm">
-                {step.lines.map((l) => (
-                  <div key={l.number} className={l.kind === "added" ? "bg-green-100" : "opacity-60"}>
-                    {l.text}
-                  </div>
-                ))}
-              </pre>
-            </div>
-          ))}
-        </section>
-      ))}
-      {model.leftovers.length > 0 && (
-        <p className="mb-4 text-amber-700">⚠ {model.leftovers.length} leftover file(s) not in any flow.</p>
-      )}
-      <Button onClick={submit}>Approve all &amp; send</Button>
-    </main>
+    <div className="flex min-h-screen">
+      <FlowRail model={model} state={state} current={current} onSelect={setCurrent} />
+      <main className="flex-1 p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold">
+            {flow.title}
+            {flow.partial && <span className="ml-2 text-sm font-normal text-gray-500">(partial — more coming)</span>}
+          </h1>
+          <span className="text-sm text-gray-500">
+            Flow {current + 1} of {model.flows.length}
+          </span>
+        </div>
+
+        {flow.steps.map((step, i) => (
+          <FlowStep
+            key={`${step.path}-${i}`}
+            step={step}
+            flowId={flow.id}
+            comments={state.comments}
+            onAddComment={(c: ReviewComment) => setState((s) => addComment(s, c))}
+          />
+        ))}
+
+        <div className="mt-6 flex items-center gap-3 border-t border-gray-200 pt-4">
+          <Button color="green" onClick={() => setState((s) => setVerdict(s, flow.id, "approved" as Verdict))}>
+            ✓ Approve
+          </Button>
+          <Button color="yellow" onClick={() => setState((s) => setVerdict(s, flow.id, "changes-requested" as Verdict))}>
+            Request changes
+          </Button>
+          <div className="flex-1" />
+          <Button color="light" disabled={current === 0} onClick={() => setCurrent((c) => c - 1)}>
+            ◀ Prev
+          </Button>
+          <Button color="light" disabled={current === model.flows.length - 1} onClick={() => setCurrent((c) => c + 1)}>
+            Next ▶
+          </Button>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <Button disabled={!decided} onClick={send}>
+            Send to agent
+          </Button>
+          <Button color="light" onClick={abort}>
+            Abort review
+          </Button>
+        </div>
+        {!decided && <p className="mt-2 text-xs text-gray-500">Give every flow a verdict to enable Send.</p>}
+      </main>
+    </div>
   );
 }

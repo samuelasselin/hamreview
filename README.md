@@ -21,6 +21,10 @@ An agent (or you) writes a `handoff.json` describing the flows (see
 npm run build                 # once, or after code changes
 npm run review -- handoff.json
 ```
-This reconciles the handoff against `git diff`, opens the review in your
-browser, blocks until you submit, and writes `feedback.json` next to where
-you ran it. The agent then reads `feedback.json` and acts.
+This reconciles the handoff against `git diff`, opens the **focus-mode review**
+in your browser (one flow at a time: a progress rail, enclosing-context steps
+with collapsed shared-code and stale/partial badges, and line comments with
+intent), blocks until you submit, and writes `feedback.json` next to where you
+ran it. Give each flow a verdict (Approve / Request changes), add line comments,
+then **Send to agent** — or **Abort review** to release the agent without
+feedback. The agent then reads `feedback.json` and acts.
