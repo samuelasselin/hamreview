@@ -52,16 +52,19 @@ export function reconcile(handoff: Handoff, diff: Diff): ReconcileResult {
       const changedForPath = changed.get(step.path) ?? new Set<number>();
       const staleRanges: LineRange[] = [];
       for (const range of step.ranges) {
-        const lines = expand(range).filter((n) => changedForPath.has(n));
-        if (lines.length === 0) {
-          staleRanges.push(range);
-        } else {
+        const all = expand(range);
+        const changedInRange = all.filter((n) => changedForPath.has(n));
+        const staleInRange = all.filter((n) => !changedForPath.has(n));
+        if (staleInRange.length > 0) {
+          for (const r of toRanges(staleInRange)) staleRanges.push(r);
+        }
+        if (changedInRange.length > 0) {
           let set = covered.get(step.path);
           if (!set) {
             set = new Set<number>();
             covered.set(step.path, set);
           }
-          for (const n of lines) set.add(n);
+          for (const n of changedInRange) set.add(n);
         }
       }
       return {

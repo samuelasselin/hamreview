@@ -46,4 +46,28 @@ describe("reconcile", () => {
     expect(paths).not.toContain("app/models/booking.rb");
     expect(paths).not.toContain("app/controllers/bookings_controller.rb");
   });
+
+  it("splits a partially-changed range: unmatched lines become stale, matched lines covered", () => {
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[4, 8]], role: "model" }] }],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [4, 5, 9] }] };
+    const result = reconcile(h, d);
+    expect(result.flows[0].steps[0].staleRanges).toEqual([[6, 8]]);
+    expect(result.leftovers).toEqual([{ path: "a.rb", ranges: [[9, 9]] }]);
+  });
+
+  it("passes the complete flag through", () => {
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", complete: true, steps: [{ path: "a.rb", ranges: [[1, 1]], role: "model" }] }],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [1] }] };
+    expect(reconcile(h, d).flows[0].complete).toBe(true);
+  });
 });
