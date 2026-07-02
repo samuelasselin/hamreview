@@ -4,3 +4,5 @@ dist/
 *.tsbuildinfo
 handoff.json
 feedback.json
+.DS_Store
+.superpowers/

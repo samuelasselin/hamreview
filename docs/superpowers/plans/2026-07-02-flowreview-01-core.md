@@ -50,6 +50,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0",
@@ -227,7 +230,12 @@ Expected: FAIL — `Cannot find module './schema'` (schema.ts not created yet).
 import type { Handoff, HandoffFlow, HandoffStep, LineRange } from "./types";
 import { isObject } from "./internal";
 
-export class HandoffValidationError extends Error {}
+export class HandoffValidationError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "HandoffValidationError";
+  }
+}
 
 export function parseHandoff(input: string | unknown): Handoff {
   const data = typeof input === "string" ? safeJson(input) : input;
@@ -1144,7 +1152,12 @@ Expected: FAIL — `Cannot find module './feedback'` (and `./index`).
 import type { Feedback, FlowVerdict, ReviewComment, Intent, Verdict, LineRange } from "./types";
 import { isObject } from "./internal";
 
-export class FeedbackValidationError extends Error {}
+export class FeedbackValidationError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "FeedbackValidationError";
+  }
+}
 
 const INTENTS: readonly Intent[] = ["must-fix", "question", "nit"];
 const VERDICTS: readonly Verdict[] = ["approved", "changes-requested"];
