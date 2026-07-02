@@ -47,8 +47,8 @@ export function FlowStep({
                   <span className="mr-3 select-none text-gray-400">{line.number}</span>
                   {line.text || " "}
                 </div>
-                {lineComments.map((c, i) => (
-                  <div key={i} className="mx-3 border-l-2 border-amber-400 bg-amber-50 px-2 py-1 text-xs">
+                {lineComments.map((c) => (
+                  <div key={`${c.lines[0]}-${c.intent}-${c.text}`} className="mx-3 border-l-2 border-amber-400 bg-amber-50 px-2 py-1 text-xs">
                     <b>{c.intent}</b>: {c.text}
                   </div>
                 ))}
