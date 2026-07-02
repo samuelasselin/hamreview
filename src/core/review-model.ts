@@ -18,6 +18,7 @@ export interface StepView {
   displayRange: LineRange;
   lines: DisplayLine[];
   stale: boolean;
+  staleRanges: LineRange[];
   collapsed: boolean;
   alreadyReviewedIn?: string;
 }
@@ -43,7 +44,7 @@ export interface ReviewModel {
 export type FileReader = (path: string) => string[];
 
 function hull(ranges: LineRange[]): LineRange {
-  if (ranges.length === 0) return [1, 1];
+  if (ranges.length === 0) return [1, 1]; // defensive; the schema forbids empty ranges
   let s = Infinity;
   let e = -Infinity;
   for (const [a, b] of ranges) {
@@ -86,6 +87,7 @@ export function buildReviewModel(handoff: Handoff, diff: Diff, readFile: FileRea
         displayRange: display,
         lines: displayLines,
         stale: step.staleRanges.length > 0,
+        staleRanges: step.staleRanges,
         collapsed: prior !== undefined,
         ...(prior ? { alreadyReviewedIn: prior.flowId } : {}),
       };

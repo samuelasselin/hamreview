@@ -122,4 +122,18 @@ describe("buildReviewModel", () => {
     const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [3] }] };
     expect(buildReviewModel(h, d, read).flows[0].steps[0].stale).toBe(true);
   });
+
+  it("surfaces stale sub-ranges on the step view", () => {
+    const read: FileReader = () => ["class A", "  def m", "    x = 1", "  end", "end"];
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[4, 5]], role: "model" }] }],
+    };
+    const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [4] }] };
+    const step = buildReviewModel(h, d, read).flows[0].steps[0];
+    expect(step.stale).toBe(true);
+    expect(step.staleRanges).toEqual([[5, 5]]);
+  });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseUnifiedDiff, changedLinesByPath } from "./diff";
+import type { Diff } from "./diff";
 
 const raw = `diff --git a/app/models/booking.rb b/app/models/booking.rb
 index e69de29..1234567 100644
@@ -113,5 +114,30 @@ index 1111111..2222222 100644
 `;
     const f = parseUnifiedDiff(raw).files[0];
     expect(f.addedLines).toEqual([2]);
+  });
+
+  it("does not treat a content line starting with +++/--- as a file header", () => {
+    const raw = `diff --git a/notes.md b/notes.md
+index 1111111..2222222 100644
+--- a/notes.md
++++ b/notes.md
+@@ -1,1 +1,3 @@
+ title
++++ plus prefixed line
++regular added line
+`;
+    const f = parseUnifiedDiff(raw).files[0];
+    expect(f.path).toBe("notes.md");
+    expect(f.addedLines).toEqual([2, 3]);
+  });
+
+  it("unions added lines when two file entries share a path", () => {
+    const diff: Diff = {
+      files: [
+        { path: "a.rb", status: "modified", addedLines: [1, 2] },
+        { path: "a.rb", status: "modified", addedLines: [5] },
+      ],
+    };
+    expect(changedLinesByPath(diff).get("a.rb")).toEqual(new Set([1, 2, 5]));
   });
 });

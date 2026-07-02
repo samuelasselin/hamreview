@@ -26,6 +26,7 @@ export function enclosingContext(lines: string[], range: LineRange): LineRange {
   if (!Number.isFinite(targetIndent)) targetIndent = 0;
 
   // Header = nearest non-blank line above `s` with indent < targetIndent.
+  // Defaults mean "no enclosing block found" -> treat the target as top-level.
   let headerLine = 1;
   let headerIndent = 0;
   for (let i = s - 1; i >= 1; i--) {

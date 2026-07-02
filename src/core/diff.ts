@@ -19,6 +19,11 @@ function strip(p: string): string {
   return p.replace(/^[ab]\//, "");
 }
 
+/**
+ * Parse a standard unified `git diff` into per-file added NEW-file line numbers.
+ * Expects default `a/`/`b/` prefixes, unquoted paths, and no color. Plan 2's git
+ * invoker must produce diffs in this shape (use `--no-color`, default prefixes).
+ */
 export function parseUnifiedDiff(raw: string): Diff {
   const files: FileDiff[] = [];
   let cur: FileDiff | null = null;
@@ -33,32 +38,38 @@ export function parseUnifiedDiff(raw: string): Diff {
     }
     if (!cur) continue;
 
-    if (line.startsWith("new file mode")) { cur.status = "added"; continue; }
-    if (line.startsWith("deleted file mode")) { cur.status = "deleted"; continue; }
-    if (line.startsWith("rename from ")) {
-      cur.status = "renamed";
-      cur.oldPath = strip(line.slice("rename from ".length).trim());
-      continue;
-    }
-    if (line.startsWith("rename to ")) {
-      cur.status = "renamed";
-      cur.path = strip(line.slice("rename to ".length).trim());
-      continue;
-    }
-    if (line.startsWith("--- ")) {
-      const p = line.slice(4).trim();
-      if (p !== "/dev/null") cur.oldPath = strip(p);
-      continue;
-    }
-    if (line.startsWith("+++ ")) {
-      const p = line.slice(4).trim();
-      if (p === "/dev/null") {
-        cur.status = "deleted";
-        if (cur.oldPath) cur.path = cur.oldPath;
-      } else {
-        cur.path = strip(p);
+    // File-header lines only appear before the first hunk (newLineNo === 0).
+    // Guarding on that prevents a hunk-body content line beginning with "+++ "
+    // or "--- " (an added/removed line whose text starts with "++ "/"-- ") from
+    // being misread as a file header, which would desync new-file line numbers.
+    if (newLineNo === 0) {
+      if (line.startsWith("new file mode")) { cur.status = "added"; continue; }
+      if (line.startsWith("deleted file mode")) { cur.status = "deleted"; continue; }
+      if (line.startsWith("rename from ")) {
+        cur.status = "renamed";
+        cur.oldPath = strip(line.slice("rename from ".length).trim());
+        continue;
       }
-      continue;
+      if (line.startsWith("rename to ")) {
+        cur.status = "renamed";
+        cur.path = strip(line.slice("rename to ".length).trim());
+        continue;
+      }
+      if (line.startsWith("--- ")) {
+        const p = line.slice(4).trim();
+        if (p !== "/dev/null") cur.oldPath = strip(p);
+        continue;
+      }
+      if (line.startsWith("+++ ")) {
+        const p = line.slice(4).trim();
+        if (p === "/dev/null") {
+          cur.status = "deleted";
+          if (cur.oldPath) cur.path = cur.oldPath;
+        } else {
+          cur.path = strip(p);
+        }
+        continue;
+      }
     }
 
     const hunk = HUNK.exec(line);
@@ -77,6 +88,10 @@ export function parseUnifiedDiff(raw: string): Diff {
 
 export function changedLinesByPath(diff: Diff): Map<string, Set<number>> {
   const map = new Map<string, Set<number>>();
-  for (const f of diff.files) map.set(f.path, new Set(f.addedLines));
+  for (const f of diff.files) {
+    const existing = map.get(f.path);
+    if (existing) for (const n of f.addedLines) existing.add(n);
+    else map.set(f.path, new Set(f.addedLines));
+  }
   return map;
 }
