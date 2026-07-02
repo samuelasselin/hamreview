@@ -41,6 +41,10 @@ export function submitFeedback(env: ServerEnv, body: unknown): Feedback {
   return feedback;
 }
 
+export function submitAbort(env: ServerEnv): void {
+  writeFileSync(env.donePath, "");
+}
+
 function required(env: NodeJS.ProcessEnv, key: string): string {
   const v = env[key];
   if (!v) throw new Error(`missing required env var ${key}`);
