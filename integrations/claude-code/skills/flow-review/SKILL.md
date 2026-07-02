@@ -9,7 +9,7 @@ Review the code you just wrote WITH the human before building further on it, org
 
 ## Steps
 
-1. **See your changes.** Run `git diff --no-color` and `git status` in the project to see every uncommitted change.
+1. **Stage and see your changes.** First run `git add -A` so newly-created files are included — the review uses `git diff HEAD`, which ignores untracked files, so an unstaged new file would silently escape review. Then run `git diff --no-color HEAD` (and `git status`) to see every change; this is exactly what the tool reviews.
 2. **Group into flows.** For each distinct data path (typically one endpoint or use case), make a flow: an ordered list of steps in the order data moves through the system (e.g. migration → model → endpoint → client → UI — adapt to the actual stack). Grouping comes from understanding the code, not from language rules.
 3. **Account for EVERY changed file.** Each changed file must be either placed in a flow OR left deliberately unclaimed (the tool surfaces unclaimed changes in a "Leftovers" bucket). Before opening the review, confirm every changed file is intentionally grouped or intentionally a leftover — never silently drop a change.
 4. **Write `handoff.json`** in the repo root:
