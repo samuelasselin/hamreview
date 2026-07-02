@@ -51,6 +51,7 @@ export default function Home() {
   if (!model) return <main className="p-8">Loading review…</main>;
   if (status === "sent") return <main className="p-8">Feedback sent. You can close this tab.</main>;
   if (status === "aborted") return <main className="p-8">Review aborted. You can close this tab.</main>;
+  if (model.flows.length === 0) return <main className="p-8">No flows to review.</main>;
 
   const flow = model.flows[current];
   const decided = allFlowsDecided(model, state);
