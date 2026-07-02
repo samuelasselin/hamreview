@@ -42,6 +42,50 @@ describe("feedback", () => {
     expect(() => parseFeedback(bad)).toThrow(/verdict/);
   });
 
+  it("rejects a non-object top-level input", () => {
+    expect(() => parseFeedback(42)).toThrow(FeedbackValidationError);
+  });
+
+  it("rejects a wrong version", () => {
+    expect(() => parseFeedback({ version: 2, submittedAt: "t", flows: [], comments: [] })).toThrow(/version/);
+  });
+
+  it("rejects an empty submittedAt", () => {
+    expect(() => parseFeedback({ version: 1, submittedAt: "", flows: [], comments: [] })).toThrow(/submittedAt/);
+  });
+
+  it("rejects non-array flows or comments", () => {
+    expect(() => parseFeedback({ version: 1, submittedAt: "t", flows: {}, comments: [] })).toThrow(/flows/);
+    expect(() => parseFeedback({ version: 1, submittedAt: "t", flows: [], comments: {} })).toThrow(/comments/);
+  });
+
+  it("rejects invalid JSON strings", () => {
+    expect(() => parseFeedback("{bad")).toThrow(FeedbackValidationError);
+  });
+
+  it("rejects an empty comment text", () => {
+    const bad = {
+      version: 1,
+      submittedAt: "t",
+      flows: [],
+      comments: [{ flowId: "f", path: "a", lines: [1, 1], intent: "nit", text: "" }],
+    };
+    expect(() => parseFeedback(bad)).toThrow(/text must be a non-empty string/);
+  });
+
+  it("rejects invalid comment line ranges", () => {
+    const mk = (lines: unknown) => ({
+      version: 1,
+      submittedAt: "t",
+      flows: [],
+      comments: [{ flowId: "f", path: "a", lines, intent: "nit", text: "x" }],
+    });
+    expect(() => parseFeedback(mk([2, 1]))).toThrow(/lines/);   // end < start
+    expect(() => parseFeedback(mk([0, 1]))).toThrow(/lines/);   // start < 1
+    expect(() => parseFeedback(mk([1]))).toThrow(/lines/);      // wrong length
+    expect(() => parseFeedback(mk([1.5, 2]))).toThrow(/lines/); // non-integer
+  });
+
   it("exposes the full public API from the barrel", () => {
     expect(typeof core.parseHandoff).toBe("function");
     expect(typeof core.parseUnifiedDiff).toBe("function");

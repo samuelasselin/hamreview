@@ -54,11 +54,11 @@ function parseComment(c: unknown, i: number): ReviewComment {
     throw new FeedbackValidationError(`${where}.flowId must be a non-empty string`);
   if (typeof c.path !== "string" || c.path.length === 0)
     throw new FeedbackValidationError(`${where}.path must be a non-empty string`);
-  if (typeof c.text !== "string")
-    throw new FeedbackValidationError(`${where}.text must be a string`);
+  const lines = parseLines(c.lines, where);
   if (!INTENTS.includes(c.intent as Intent))
     throw new FeedbackValidationError(`${where}.intent must be one of ${INTENTS.join(", ")}`);
-  const lines = parseLines(c.lines, where);
+  if (typeof c.text !== "string" || c.text.length === 0)
+    throw new FeedbackValidationError(`${where}.text must be a non-empty string`);
   return { flowId: c.flowId, path: c.path, lines, intent: c.intent as Intent, text: c.text };
 }
 
