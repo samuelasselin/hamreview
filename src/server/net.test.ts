@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findFreePort, waitForFile } from "./net";
+import { createServer } from "node:http";
+import { findFreePort, waitForFile, waitForUrl } from "./net";
 
 describe("findFreePort", () => {
   it("returns a usable port number", async () => {
@@ -25,5 +26,25 @@ describe("waitForFile", () => {
   it("resolves false on timeout", async () => {
     const found = await waitForFile(join(tmpdir(), "flowreview-does-not-exist-xyz"), 100, 20);
     expect(found).toBe(false);
+  });
+});
+
+describe("waitForUrl", () => {
+  it("resolves true when the server responds", async () => {
+    const srv = createServer((_req, res) => {
+      res.statusCode = 200;
+      res.end("ok");
+    });
+    await new Promise<void>((resolve) => srv.listen(0, resolve));
+    const addr = srv.address();
+    const port = addr && typeof addr === "object" ? addr.port : 0;
+    const ok = await waitForUrl(`http://127.0.0.1:${port}`, 2000, 20);
+    expect(ok).toBe(true);
+    await new Promise<void>((resolve) => srv.close(() => resolve()));
+  });
+
+  it("resolves false when nothing responds before the timeout", async () => {
+    const ok = await waitForUrl("http://127.0.0.1:1", 200, 50);
+    expect(ok).toBe(false);
   });
 });

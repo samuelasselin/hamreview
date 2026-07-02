@@ -39,9 +39,9 @@ export function waitForUrl(url: string, timeoutMs: number, intervalMs = 200): Pr
 
 async function poll(check: () => boolean | Promise<boolean>, timeoutMs: number, intervalMs: number): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
+  for (;;) {
     if (await check()) return true;
+    if (Date.now() >= deadline) return false;
     await new Promise((r) => setTimeout(r, intervalMs));
   }
-  return false;
 }
