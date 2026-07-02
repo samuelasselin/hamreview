@@ -28,3 +28,27 @@ intent), blocks until you submit, and writes `feedback.json` next to where you
 ran it. Give each flow a verdict (Approve / Request changes), add line comments,
 then **Send to agent** — or **Abort review** to release the agent without
 feedback. The agent then reads `feedback.json` and acts.
+
+## Install as a global tool
+
+```bash
+npm run build      # build the app once
+npm i -g .         # (or: npm link) — installs the `flowreview` bin globally
+```
+
+Now `flowreview <handoff.json>` works from any project: it serves the review UI
+from its own install location, reads that project's `git diff` via the handoff's
+`root`, and writes `feedback.json` into your current directory.
+
+## Use it from a coding agent (Claude Code)
+
+Install the integration files (`integrations/claude-code/`):
+- the **`flow-review` skill** — your agent invokes it at a checkpoint: it groups
+  its uncommitted changes into data-flow slices, writes `handoff.json`, runs
+  `flowreview handoff.json` (which blocks until you submit), then reads
+  `feedback.json` and acts on your comments and per-flow verdicts.
+- the **`/flow-review` command** — run it yourself to demand a review of the
+  agent's current changes on the spot.
+
+Every changed file is accounted for — grouped into a flow or surfaced in the
+**Leftovers** bucket — so nothing escapes review.
