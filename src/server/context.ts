@@ -25,6 +25,11 @@ export function readEnv(env: NodeJS.ProcessEnv): ServerEnv {
 
 export function buildModelFor(handoffPath: string): ReviewModel {
   const handoff = parseHandoff(readFileSync(handoffPath, "utf8"));
+  if (handoff.base !== "working-tree") {
+    throw new Error(
+      `unsupported handoff base "${handoff.base}"; only "working-tree" is supported in this version`,
+    );
+  }
   const diff = parseUnifiedDiff(getWorkingDiff(handoff.root));
   return buildReviewModel(handoff, diff, makeFileReader(handoff.root));
 }

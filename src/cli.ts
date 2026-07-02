@@ -32,6 +32,22 @@ async function main(): Promise<void> {
     },
   });
 
+  const cleanup = (): void => {
+    server.kill();
+    try {
+      rmSync(work, { recursive: true, force: true });
+    } catch {
+      // best effort
+    }
+  };
+
+  // Ctrl-C is a graceful abort: tear down the server + temp dir, exit non-zero.
+  process.on("SIGINT", () => {
+    console.error("\nreview aborted");
+    cleanup();
+    process.exit(130);
+  });
+
   try {
     const url = `http://localhost:${port}`;
     const ready = await waitForUrl(url, 30000);
@@ -40,7 +56,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log(`FlowReview open at ${url} — review, then submit in the browser.`);
+    console.log(`FlowReview open at ${url} — review, then submit in the browser (Ctrl-C to abort).`);
     await open(url);
 
     const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
@@ -51,8 +67,7 @@ async function main(): Promise<void> {
     console.error("review was not submitted (browser closed?)");
     process.exit(1);
   } finally {
-    server.kill();
-    rmSync(work, { recursive: true, force: true });
+    cleanup();
   }
 }
 

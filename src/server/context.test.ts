@@ -48,6 +48,20 @@ describe("buildModelFor", () => {
     const kinds = model.flows[0].steps[0].lines.map((l) => l.kind);
     expect(kinds).toContain("added");
   });
+
+  it("throws on an unsupported base", () => {
+    const p = join(repo, "handoff-badbase.json");
+    writeFileSync(
+      p,
+      JSON.stringify({
+        version: 1,
+        root: repo,
+        base: "main",
+        flows: [{ id: "f", title: "F", steps: [{ path: "a.txt", ranges: [[2, 2]], role: "model" }] }],
+      }),
+    );
+    expect(() => buildModelFor(p)).toThrow(/unsupported handoff base/);
+  });
 });
 
 describe("submitFeedback", () => {
