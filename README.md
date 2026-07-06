@@ -1,8 +1,8 @@
-# FlowReview
+# HamReview
 
 **Review AI-generated code by the flow of data, not file-by-file.**
 
-When a coding agent produces a whole feature at once, FlowReview shows it to you as
+When a coding agent produces a whole feature at once, HamReview shows it to you as
 **vertical slices** — for each flow (e.g. one endpoint or use case) it lays out the
 complete path the data travels, in order (migration → model → endpoint → client → UI),
 so you review one coherent idea end-to-end instead of jumping between files. You comment
@@ -14,35 +14,34 @@ on exact lines, sign off each slice, and your feedback goes straight back to the
 
 - **Node.js ≥ 20** (Next.js 15 / Vitest 3). Check with `node --version`.
   If you use `nvm`: `nvm install 24 && nvm use 24`.
-- **git** (FlowReview reviews a project's `git diff`).
+- **git** (HamReview reviews a project's `git diff`).
 
 ---
 
 ## 2. Install
 
-From the FlowReview repo (the branch that contains all four build stages —
-`plan-04-claude-integration`, or `master` once the stack is merged):
+No clone needed — pick one:
 
 ```bash
-npm install          # install dependencies
-npm run build        # build the review UI (required before first use)
-npm link             # put the `flowreview` command on your PATH  (reversible)
+# one-off / recommended — no install, downloads and caches:
+npx hamreview <handoff.json>
+
+# or install the command globally:
+npm i -g hamreview
+hamreview <handoff.json>
 ```
 
-`npm link` is recommended for trying it out (undo with `npm unlink -g flowreview`).
-For a permanent install use `npm i -g .` instead.
-
-Verify it's installed:
+Verify it's installed (global install only):
 
 ```bash
-flowreview            # prints: usage: flowreview <handoff.json>
+hamreview            # prints: usage: hamreview <handoff.json>
 ```
 
 ---
 
 ## 3. Try it in 2 minutes (standalone)
 
-You don't need an agent to see FlowReview work — hand-write one `handoff.json` and run it.
+You don't need an agent to see HamReview work — hand-write one `handoff.json` and run it.
 
 **a. Make a throwaway project with a change to review:**
 
@@ -84,7 +83,7 @@ JSON
 **c. Open the review:**
 
 ```bash
-flowreview handoff.json
+npx hamreview handoff.json
 ```
 
 Your browser opens to the focus-mode review. It **blocks here** until you submit.
@@ -94,7 +93,7 @@ lines highlighted. Click a line to leave a comment (🔴 must-fix / ❓ question
 give the flow a verdict (**Approve** or **Request changes**), then **Send to agent**.
 (Or **Abort review** to release without feedback.)
 
-**e. See the result:** `flowreview` exits and writes **`feedback.json`** into the
+**e. See the result:** `hamreview` exits and writes **`feedback.json`** into the
 directory you ran it from:
 
 ```bash
@@ -107,19 +106,25 @@ That's the whole loop. Clean up with `rm -rf /tmp/fr-demo`.
 
 ## 4. Use it with a coding agent (Claude Code)
 
-FlowReview ships a Claude Code integration in `integrations/claude-code/`:
+Install the plugin from its marketplace — no clone, no manual CLI install:
 
-- **`flow-review` skill** — the agent invokes it at a checkpoint after writing a feature:
+```text
+/plugin marketplace add samuelasselin/hamreview
+/plugin install ham-review@hamreview
+```
+
+This gives you:
+
+- **`ham-review` skill** — the agent invokes it at a checkpoint after writing a feature:
   it stages its changes, groups them into data-flow slices, writes `handoff.json`, runs
-  `flowreview handoff.json` (which **blocks the agent** until you submit), then reads
-  `feedback.json` and acts on each comment (by intent) and each flow's verdict.
-- **`/flow-review` command** — run it yourself to demand a review of the agent's current
+  `npx -y hamreview handoff.json` (which **blocks the agent** until you submit), then
+  reads `feedback.json` and acts on each comment (by intent) and each flow's verdict.
+- **`/ham-review` command** — run it yourself to demand a review of the agent's current
   changes on the spot.
 
-Install them by copying the skill and command into your Claude Code config (e.g. a
-plugin or your `~/.claude/` skills/commands directory), with `flowreview` on your PATH
-(step 2). Then, in a session where the agent has made changes, the agent runs the skill
-(or you run `/flow-review`) and the same browser loop opens.
+In a session where the agent has made changes, the agent runs the skill (or you run
+`/ham-review`) and the browser loop opens — `npx` fetches the CLI on first use and caches
+it for next time.
 
 Every changed file is accounted for — grouped into a flow, or surfaced in the
 **⚠ Leftovers** bucket — so nothing escapes review.
@@ -142,7 +147,7 @@ Every changed file is accounted for — grouped into a flow, or surfaced in the
 
 ## 6. The contract (for reference)
 
-FlowReview's only interface is two JSON files, so any agent can drive it:
+HamReview's only interface is two JSON files, so any agent can drive it:
 
 - **`handoff.json`** (in): `{ version:1, root, base:"working-tree", feature?, flows[] }`,
   where each flow has `id`, `title`, optional `complete`, and `steps[]` of
@@ -157,12 +162,14 @@ Full design: `docs/superpowers/specs/`.
 
 ## 7. Troubleshooting
 
-- **`flowreview: command not found`** — run `npm link` (step 2) and ensure your npm global
-  bin is on `PATH`.
-- **A new file you added isn't in the review** — FlowReview reviews `git diff HEAD`, which
+- **`npx hamreview` fails to fetch / hangs** — check your network and npm registry
+  access; try `npm i -g hamreview` instead so the command is installed locally.
+- **`hamreview: command not found`** (global install) — ensure your npm global bin is on
+  `PATH`, or just use `npx hamreview` instead.
+- **A new file you added isn't in the review** — HamReview reviews `git diff HEAD`, which
   ignores untracked files. Run `git add -A` first (the agent skill does this automatically).
-- **"server did not start in time" / blank page** — run `npm run build` in the FlowReview
-  repo; the CLI serves a production build.
+- **"server did not start in time" / blank page** — try again; if it persists, reinstall
+  with `npm i -g hamreview` (or clear the `npx` cache with `npx clear-npx-cache`) and retry.
 - **Wrong Node version errors** — you need Node ≥ 20 (`nvm use 24`).
 - **Nothing happens / it seems stuck** — that's the point: the CLI **blocks** until you
   submit or abort in the browser tab it opened.
@@ -178,4 +185,4 @@ npm run typecheck:core # verify the core stays framework/DOM-free
 npm run build          # production build
 ```
 
-Uninstall the linked CLI: `npm unlink -g flowreview`.
+Remove a global install: `npm rm -g hamreview`.

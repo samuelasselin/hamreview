@@ -3,7 +3,7 @@ name: ham-review
 description: Use at a checkpoint after writing a coherent slice of a feature (or when the human asks) to review it by data-flow slices — group your uncommitted changes into flows, open a blocking browser review for the human, and act on their line-level feedback before continuing.
 ---
 
-# Flow Review
+# HamReview
 
 Review the code you just wrote WITH the human before building further on it, organized by the flow of data rather than file-by-file. You stay the code owner; the human signs off each slice.
 

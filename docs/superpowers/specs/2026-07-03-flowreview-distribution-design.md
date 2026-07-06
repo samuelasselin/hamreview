@@ -1,13 +1,15 @@
-# FlowReview — Distribution Design Spec (npm + Claude Code plugin)
+# HamReview — Distribution Design Spec (npm + Claude Code plugin)
+
+> **Shipped as `hamreview`** (2026-07-06): the unscoped npm name `hamreview` was free, so the tool was renamed from `flowreview` and published unscoped. See `docs/superpowers/plans/2026-07-06-hamreview-05-distribution.md`.
 
 - **Date:** 2026-07-03
 - **Status:** Approved for planning
 - **Depends on:** the complete tool on `main` (Plans 1–4).
-- **Goal:** make FlowReview usable with **no clone** and installable as a **Claude Code plugin from a marketplace** — the "install once, use everywhere," Plannotator-style experience.
+- **Goal:** make HamReview usable with **no clone** and installable as a **Claude Code plugin from a marketplace** — the "install once, use everywhere," Plannotator-style experience.
 
 ## Purpose
 
-Today, using FlowReview means clone → `npm install` → `npm run build` → `npm link`. This makes it a one-command install (`npx`/global) and a two-command Claude Code plugin install, so a coding agent can review-by-flow with essentially zero setup.
+Today, using HamReview means clone → `npm install` → `npm run build` → `npm link`. This makes it a one-command install (`npx`/global) and a two-command Claude Code plugin install, so a coding agent can review-by-flow with essentially zero setup.
 
 ## Decisions
 
