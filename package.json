@@ -27,14 +27,9 @@
     "access": "public"
   },
   "files": [
-    ".next",
-    "app",
+    ".next/standalone",
     "src",
-    "bin",
-    ".flowbite-react",
-    "next.config.ts",
-    "postcss.config.mjs",
-    "tsconfig.json"
+    "bin"
   ],
   "scripts": {
     "dev": "next dev",
