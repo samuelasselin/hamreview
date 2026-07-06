@@ -1,0 +1,9 @@
+{
+  "name": "ham-review",
+  "version": "1.0.0",
+  "description": "Review AI-generated code by the flow of data, not file-by-file.",
+  "author": { "name": "Samuel Asselin" },
+  "homepage": "https://github.com/samuelasselin/hamreview",
+  "repository": "https://github.com/samuelasselin/hamreview",
+  "keywords": ["code-review", "claude-code", "workflow"]
+}

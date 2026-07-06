@@ -1,5 +1,5 @@
 ---
-name: flow-review
+name: ham-review
 description: Use at a checkpoint after writing a coherent slice of a feature (or when the human asks) to review it by data-flow slices — group your uncommitted changes into flows, open a blocking browser review for the human, and act on their line-level feedback before continuing.
 ---
 
@@ -33,7 +33,7 @@ Review the code you just wrote WITH the human before building further on it, org
    }
    ```
    `ranges` are 1-indexed inclusive `[start, end]` line ranges in the NEW file. Set `"complete": false` for a flow that is only partially built so far.
-5. **Open the review (this blocks your turn):** run `flowreview handoff.json` from the repo root. Your turn blocks until the human submits in their browser; then `feedback.json` is written to your current directory (the directory you run `flowreview` from — the repo root in this workflow).
+5. **Open the review (this blocks your turn):** run `npx -y hamreview handoff.json` from the repo root. Your turn blocks until the human submits in their browser; then `feedback.json` is written to your current directory (the directory you run it from — the repo root in this workflow).
 6. **Act on the feedback.** Read `feedback.json`:
    - Per flow `verdict`: `changes-requested` → address its comments before proceeding; `approved` → the human owns this slice.
    - Per comment `intent`: `must-fix` → make the change; `question` → answer it (and change if warranted); `nit` → optional.
@@ -41,5 +41,5 @@ Review the code you just wrote WITH the human before building further on it, org
 7. **Re-checkpoint** if your follow-up changes warrant another review.
 
 ## Requirements
-- `flowreview` must be installed and on PATH (`npm i -g .` or `npm link` the flowreview package).
+- Node.js ≥ 20 must be installed (`node --version`). The CLI is fetched and run via `npx -y hamreview` — no manual install needed.
 - If `git diff` is empty, there is nothing to review — say so and do not open the tool.

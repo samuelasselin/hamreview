@@ -1,0 +1,10 @@
+{
+  "name": "hamreview",
+  "owner": {
+    "name": "Samuel Asselin",
+    "url": "https://github.com/samuelasselin"
+  },
+  "plugins": [
+    { "name": "ham-review", "source": "." }
+  ]
+}
