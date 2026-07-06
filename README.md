@@ -20,91 +20,23 @@ on exact lines, sign off each slice, and your feedback goes straight back to the
 
 ## 2. Install
 
-No clone needed — pick one:
+**Most people don't install anything.** If you use the Claude Code plugin (section 3),
+it runs HamReview for you automatically via `npx`.
+
+If you want to run the command yourself, pick one:
 
 ```bash
-# one-off / recommended — no install, downloads and caches:
+# Option A — recommended, no install. Downloads and caches on first run:
 npx hamreview <handoff.json>
 
-# or install the command globally:
+# Option B — install once, then call it directly:
 npm i -g hamreview
 hamreview <handoff.json>
 ```
 
-Verify it's installed (global install only):
-
-```bash
-hamreview            # prints: usage: hamreview <handoff.json>
-```
-
 ---
 
-## 3. Try it in 2 minutes (standalone)
-
-You don't need an agent to see HamReview work — hand-write one `handoff.json` and run it.
-
-**a. Make a throwaway project with a change to review:**
-
-```bash
-mkdir /tmp/fr-demo && cd /tmp/fr-demo
-git init -q
-printf 'hello\n' > example.txt
-git add -A && git -c user.email=you@example.com -c user.name=you commit -qm "init"
-
-# now make an uncommitted change (add two lines):
-printf 'hello\nworld\nagain\n' > example.txt
-git add -A     # IMPORTANT: stage changes so new/changed lines appear in `git diff HEAD`
-```
-
-**b. Write `handoff.json` in that project** (describes the flows to review):
-
-```bash
-cat > handoff.json <<JSON
-{
-  "version": 1,
-  "root": "/tmp/fr-demo",
-  "base": "working-tree",
-  "feature": "Demo change",
-  "flows": [
-    {
-      "id": "example",
-      "title": "Example flow",
-      "steps": [
-        { "path": "example.txt", "ranges": [[2, 3]], "role": "content", "note": "added lines" }
-      ]
-    }
-  ]
-}
-JSON
-```
-
-(`ranges` are 1-indexed inclusive `[start, end]` line ranges in the changed file.)
-
-**c. Open the review:**
-
-```bash
-npx hamreview handoff.json
-```
-
-Your browser opens to the focus-mode review. It **blocks here** until you submit.
-
-**d. Review it:** you'll see the "Example flow" slice with `example.txt` and its added
-lines highlighted. Click a line to leave a comment (🔴 must-fix / ❓ question / 💡 nit),
-give the flow a verdict (**Approve** or **Request changes**), then **Send to agent**.
-(Or **Abort review** to release without feedback.)
-
-**e. See the result:** `hamreview` exits and writes **`feedback.json`** into the
-directory you ran it from:
-
-```bash
-cat /tmp/fr-demo/feedback.json    # your verdicts + line comments, ready for an agent
-```
-
-That's the whole loop. Clean up with `rm -rf /tmp/fr-demo`.
-
----
-
-## 4. Use it with a coding agent (Claude Code)
+## 3. Use it with a coding agent (Claude Code)
 
 Install the plugin from its marketplace — no clone, no manual CLI install:
 
@@ -131,7 +63,7 @@ Every changed file is accounted for — grouped into a flow, or surfaced in the
 
 ---
 
-## 5. What you see in the review
+## 4. What you see in the review
 
 - **Focus mode** — one flow fills the screen; a **progress rail** lists every flow (with
   your verdict marks) plus the Leftovers bucket. Advance flow-by-flow.
@@ -145,7 +77,7 @@ Every changed file is accounted for — grouped into a flow, or surfaced in the
 
 ---
 
-## 6. The contract (for reference)
+## 5. The contract (for reference)
 
 HamReview's only interface is two JSON files, so any agent can drive it:
 
@@ -160,7 +92,7 @@ Full design: `docs/superpowers/specs/`.
 
 ---
 
-## 7. Troubleshooting
+## 6. Troubleshooting
 
 - **`npx hamreview` fails to fetch / hangs** — check your network and npm registry
   access; try `npm i -g hamreview` instead so the command is installed locally.
@@ -176,7 +108,7 @@ Full design: `docs/superpowers/specs/`.
 
 ---
 
-## 8. Develop
+## 7. Develop
 
 ```bash
 npm test               # unit + integration tests
