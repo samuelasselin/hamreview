@@ -57,7 +57,7 @@ async function main(): Promise<void> {
   });
 
   try {
-    const url = `http://localhost:${port}`;
+    const url = `http://127.0.0.1:${port}`;
     const ready = await waitForUrl(url, 30000);
     if (!ready) {
       console.error("server did not start in time");
