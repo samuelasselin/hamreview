@@ -1,8 +1,31 @@
 {
   "name": "hamreview",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
+  "private": false,
   "type": "module",
+  "description": "Review AI-generated code by the flow of data, not file-by-file — a blocking, human-in-the-loop review for coding agents.",
+  "license": "MIT",
+  "author": "Samuel Asselin",
+  "homepage": "https://github.com/samuelasselin/hamreview#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelasselin/hamreview.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samuelasselin/hamreview/issues"
+  },
+  "keywords": [
+    "code-review",
+    "ai",
+    "claude-code",
+    "agent",
+    "diff",
+    "git",
+    "developer-tools"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     ".next",
     "app",
