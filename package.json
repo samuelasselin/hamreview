@@ -38,14 +38,14 @@
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/prepare-standalone.mjs",
     "start": "next start",
     "review": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit",
-    "prepack": "next build"
+    "prepack": "npm run build"
   },
   "bin": {
     "hamreview": "bin/hamreview.mjs"
@@ -58,16 +58,16 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "flowbite-react": "^0.12.17",
+    "next": "^15.5.20",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "tailwindcss": "^4.3.2",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "flowbite-react": "^0.12.17",
-    "next": "^15.5.20",
     "open": "^10.2.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
     "tsx": "^4.22.4"
   }
 }

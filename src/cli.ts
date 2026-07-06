@@ -6,6 +6,7 @@ import open from "open";
 import { parseHandoff } from "./core/index";
 import { findFreePort, waitForFile, waitForUrl } from "./server/net";
 import { packageRootFrom } from "./server/paths";
+import { serverSpawnSpec } from "./server/standalone";
 
 async function main(): Promise<void> {
   const handoffArg = process.argv[2];
@@ -24,15 +25,19 @@ async function main(): Promise<void> {
   const port = await findFreePort();
 
   const packageRoot = packageRootFrom(import.meta.url);
-  const server = spawn("npx", ["next", "start", "-p", String(port)], {
+  const spec = serverSpawnSpec({
+    execPath: process.execPath,
+    packageRoot,
+    port,
+    handoffPath,
+    feedbackOut,
+    donePath,
+    baseEnv: process.env,
+  });
+  const server = spawn(spec.command, spec.args, {
     cwd: packageRoot,
     stdio: "inherit",
-    env: {
-      ...process.env,
-      HAMREVIEW_HANDOFF: handoffPath,
-      HAMREVIEW_FEEDBACK_OUT: feedbackOut,
-      HAMREVIEW_DONE: donePath,
-    },
+    env: spec.env,
   });
 
   const cleanup = (): void => {
