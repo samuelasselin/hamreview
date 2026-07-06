@@ -3,7 +3,7 @@ import { packageRootFrom } from "./paths";
 
 describe("packageRootFrom", () => {
   it("resolves the package root two levels above src/cli.ts", () => {
-    expect(packageRootFrom("file:///Users/x/flowreview/src/cli.ts")).toBe("/Users/x/flowreview");
+    expect(packageRootFrom("file:///Users/x/hamreview/src/cli.ts")).toBe("/Users/x/hamreview");
   });
 
   it("works for a nested install path", () => {

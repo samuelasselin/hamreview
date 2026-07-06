@@ -13,7 +13,7 @@ function git(args: string[]): void {
 }
 
 beforeAll(() => {
-  repo = mkdtempSync(join(tmpdir(), "flowreview-routes-"));
+  repo = mkdtempSync(join(tmpdir(), "hamreview-routes-"));
   git(["init", "-q"]);
   writeFileSync(join(repo, "a.txt"), "x\n");
   git(["add", "."]);
@@ -29,16 +29,16 @@ beforeAll(() => {
       flows: [{ id: "f", title: "F", steps: [{ path: "a.txt", ranges: [[2, 2]], role: "x" }] }],
     }),
   );
-  process.env.FLOWREVIEW_HANDOFF = handoffPath;
-  process.env.FLOWREVIEW_FEEDBACK_OUT = join(repo, "feedback.json");
-  process.env.FLOWREVIEW_DONE = join(repo, ".done");
+  process.env.HAMREVIEW_HANDOFF = handoffPath;
+  process.env.HAMREVIEW_FEEDBACK_OUT = join(repo, "feedback.json");
+  process.env.HAMREVIEW_DONE = join(repo, ".done");
 });
 
 afterAll(() => {
   rmSync(repo, { recursive: true, force: true });
-  delete process.env.FLOWREVIEW_HANDOFF;
-  delete process.env.FLOWREVIEW_FEEDBACK_OUT;
-  delete process.env.FLOWREVIEW_DONE;
+  delete process.env.HAMREVIEW_HANDOFF;
+  delete process.env.HAMREVIEW_FEEDBACK_OUT;
+  delete process.env.HAMREVIEW_DONE;
 });
 
 describe("GET /api/review", () => {
@@ -63,7 +63,7 @@ describe("POST /api/feedback", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(existsSync(process.env.FLOWREVIEW_DONE as string)).toBe(true);
+    expect(existsSync(process.env.HAMREVIEW_DONE as string)).toBe(true);
   });
 
   it("returns 400 on an invalid body", async () => {

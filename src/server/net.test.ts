@@ -15,7 +15,7 @@ describe("findFreePort", () => {
 
 describe("waitForFile", () => {
   it("resolves true when the file appears", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "flowreview-net-"));
+    const dir = mkdtempSync(join(tmpdir(), "hamreview-net-"));
     const target = join(dir, "signal");
     setTimeout(() => writeFileSync(target, ""), 50);
     const found = await waitForFile(target, 2000, 20);
@@ -24,7 +24,7 @@ describe("waitForFile", () => {
   });
 
   it("resolves false on timeout", async () => {
-    const found = await waitForFile(join(tmpdir(), "flowreview-does-not-exist-xyz"), 100, 20);
+    const found = await waitForFile(join(tmpdir(), "hamreview-does-not-exist-xyz"), 100, 20);
     expect(found).toBe(false);
   });
 });

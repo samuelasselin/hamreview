@@ -12,7 +12,7 @@ function git(args: string[]): void {
 }
 
 beforeAll(() => {
-  repo = mkdtempSync(join(tmpdir(), "flowreview-git-"));
+  repo = mkdtempSync(join(tmpdir(), "hamreview-git-"));
   git(["init", "-q"]);
   writeFileSync(join(repo, "a.txt"), "one\ntwo\nthree\n");
   git(["add", "."]);

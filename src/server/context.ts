@@ -17,9 +17,9 @@ export interface ServerEnv {
 }
 
 export function readEnv(env: NodeJS.ProcessEnv): ServerEnv {
-  const handoffPath = required(env, "FLOWREVIEW_HANDOFF");
-  const feedbackOut = required(env, "FLOWREVIEW_FEEDBACK_OUT");
-  const donePath = required(env, "FLOWREVIEW_DONE");
+  const handoffPath = required(env, "HAMREVIEW_HANDOFF");
+  const feedbackOut = required(env, "HAMREVIEW_FEEDBACK_OUT");
+  const donePath = required(env, "HAMREVIEW_DONE");
   return { handoffPath, feedbackOut, donePath };
 }
 

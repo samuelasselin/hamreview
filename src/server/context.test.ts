@@ -13,7 +13,7 @@ function git(args: string[]): void {
 }
 
 beforeAll(() => {
-  repo = mkdtempSync(join(tmpdir(), "flowreview-ctx-"));
+  repo = mkdtempSync(join(tmpdir(), "hamreview-ctx-"));
   git(["init", "-q"]);
   writeFileSync(join(repo, "a.txt"), "class A\n  old\nend\n");
   git(["add", "."]);
@@ -36,7 +36,7 @@ afterAll(() => rmSync(repo, { recursive: true, force: true }));
 
 describe("readEnv", () => {
   it("throws when a variable is missing", () => {
-    expect(() => readEnv({} as NodeJS.ProcessEnv)).toThrow(/FLOWREVIEW_HANDOFF/);
+    expect(() => readEnv({} as NodeJS.ProcessEnv)).toThrow(/HAMREVIEW_HANDOFF/);
   });
 });
 

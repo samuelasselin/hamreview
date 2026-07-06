@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata = {
-  title: "FlowReview",
+  title: "HamReview",
   description: "Review AI-generated code by data flow.",
 };
 

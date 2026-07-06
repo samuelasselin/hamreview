@@ -10,7 +10,7 @@ import { packageRootFrom } from "./server/paths";
 async function main(): Promise<void> {
   const handoffArg = process.argv[2];
   if (!handoffArg) {
-    console.error("usage: flowreview <handoff.json>");
+    console.error("usage: hamreview <handoff.json>");
     process.exit(2);
   }
   // resolve() handles both an absolute path and a cwd-relative one.
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   // Validate early so a bad handoff fails before booting anything.
   parseHandoff(readFileSync(handoffPath, "utf8"));
 
-  const work = mkdtempSync(join(tmpdir(), "flowreview-run-"));
+  const work = mkdtempSync(join(tmpdir(), "hamreview-run-"));
   const feedbackOut = join(process.cwd(), "feedback.json");
   const donePath = join(work, ".done");
   const port = await findFreePort();
@@ -29,9 +29,9 @@ async function main(): Promise<void> {
     stdio: "inherit",
     env: {
       ...process.env,
-      FLOWREVIEW_HANDOFF: handoffPath,
-      FLOWREVIEW_FEEDBACK_OUT: feedbackOut,
-      FLOWREVIEW_DONE: donePath,
+      HAMREVIEW_HANDOFF: handoffPath,
+      HAMREVIEW_FEEDBACK_OUT: feedbackOut,
+      HAMREVIEW_DONE: donePath,
     },
   });
 
@@ -59,7 +59,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log(`FlowReview open at ${url} — review, then submit in the browser (Ctrl-C to abort).`);
+    console.log(`HamReview open at ${url} — review, then submit in the browser (Ctrl-C to abort).`);
     await open(url);
 
     const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
