@@ -78,7 +78,8 @@ async function main(): Promise<void> {
     const ready = await waitForUrl(url, 30000);
     if (!ready) {
       console.error("server did not start in time");
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
 
     const reviewUrl = `${url}/?token=${token}`;
@@ -91,10 +92,11 @@ async function main(): Promise<void> {
     const outcome = done ? readDoneOutcome(donePath) : "";
     if (outcome === "submitted" && existsSync(feedbackOut)) {
       console.log(`feedback written to ${feedbackOut}`);
-      process.exit(0);
+      process.exitCode = 0;
+      return;
     }
     console.error("review was not submitted" + (outcome === "aborted" ? " (aborted in the browser)" : " (browser closed?)"));
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     cleanup();
   }
