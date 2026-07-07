@@ -44,3 +44,26 @@ export function toFeedback(state: ReviewState, submittedAt: string): Feedback {
   const flows: FlowVerdict[] = Object.entries(state.verdicts).map(([id, verdict]) => ({ id, verdict }));
   return buildFeedback(flows, state.comments, submittedAt);
 }
+
+export function serializeState(state: ReviewState): string {
+  return JSON.stringify(state);
+}
+
+/** Restore a persisted state; null for anything malformed (fresh start). */
+export function deserializeState(raw: string | null): ReviewState | null {
+  if (!raw) return null;
+  try {
+    const d: unknown = JSON.parse(raw);
+    if (typeof d !== "object" || d === null || Array.isArray(d)) return null;
+    const o = d as Record<string, unknown>;
+    if (typeof o.verdicts !== "object" || o.verdicts === null || Array.isArray(o.verdicts)) return null;
+    if (!Array.isArray(o.comments)) return null;
+    return {
+      verdicts: o.verdicts as Record<string, never>,
+      comments: o.comments as ReviewState["comments"],
+      leftoversAcked: o.leftoversAcked === true,
+    } as ReviewState;
+  } catch {
+    return null;
+  }
+}

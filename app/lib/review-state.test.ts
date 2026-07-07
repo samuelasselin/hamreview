@@ -8,6 +8,8 @@ import {
   toFeedback,
   canSend,
   setLeftoversAcked,
+  serializeState,
+  deserializeState,
 } from "./review-state";
 import type { ReviewModel } from "../../src/core/index";
 
@@ -73,5 +75,26 @@ describe("leftovers acknowledgment", () => {
 
   it("still requires every flow verdict", () => {
     expect(canSend(modelWithout, emptyReviewState)).toBe(false);
+  });
+});
+
+describe("state persistence", () => {
+  it("round-trips a state", () => {
+    let s = setVerdict(emptyReviewState, "f", "approved");
+    s = addComment(s, { flowId: "f", path: "a.txt", lines: [2, 2], intent: "nit", text: "t" });
+    s = setLeftoversAcked(s, true);
+    expect(deserializeState(serializeState(s))).toEqual(s);
+  });
+
+  it("returns null for garbage, null, or wrong shapes", () => {
+    expect(deserializeState(null)).toBeNull();
+    expect(deserializeState("not json{")).toBeNull();
+    expect(deserializeState(JSON.stringify({ verdicts: [] }))).toBeNull();
+    expect(deserializeState(JSON.stringify({ verdicts: {}, comments: {} }))).toBeNull();
+  });
+
+  it("defaults a missing leftoversAcked to false", () => {
+    const restored = deserializeState(JSON.stringify({ verdicts: {}, comments: [] }));
+    expect(restored).toEqual({ verdicts: {}, comments: [], leftoversAcked: false });
   });
 });

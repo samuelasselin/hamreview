@@ -9,12 +9,16 @@ import { LeftoverBlock } from "./components/LeftoverBlock";
 import {
   addComment,
   canSend,
+  deserializeState,
   emptyReviewState,
+  serializeState,
   setLeftoversAcked,
   setVerdict,
   toFeedback,
   type ReviewState,
 } from "./lib/review-state";
+
+const STORAGE_KEY = "hamreview-state";
 
 export default function Home() {
   const [model, setModel] = useState<ReviewModel | null>(null);
@@ -37,6 +41,31 @@ export default function Home() {
       .then((d) => setModel(d.model))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load the review."));
   }, []);
+
+  // Restore any in-progress state (survives refresh; new runs get a new origin).
+  useEffect(() => {
+    const restored = deserializeState(sessionStorage.getItem(STORAGE_KEY));
+    if (restored) setState(restored);
+  }, []);
+
+  // Autosave on every change.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, serializeState(state));
+    } catch {
+      // storage full/disabled — degrade to in-memory only
+    }
+  }, [state]);
+
+  // Warn before discarding real work (refresh itself restores via autosave).
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      const hasWork = state.comments.length > 0 || Object.keys(state.verdicts).length > 0;
+      if (status === "reviewing" && hasWork) e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [state, status]);
 
   async function send() {
     try {
