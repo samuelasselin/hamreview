@@ -53,6 +53,9 @@ Implementation is split into **two plans**:
 14. **Narration recipe.** SKILL.md gains a short "Narration" section (positive recipe, per prior user feedback): one line per step, `<verb> + the one specific that matters`, matching the user's language — with one ❌/✅ example pair. No prohibition lists.
 15. **Hook prompt alignment.** `buildReason` adds one clause so the agent runs the review the right way from the hook path too: "invoke the ham-review skill now (run its CLI in the background — it blocks until the human submits)".
 16. **Lockstep rule.** `commands/ham-review.md` is regenerated to mirror the skill's steps 5–6 changes verbatim-in-spirit; a checklist item in the plan enforces it.
+17. **Slicing quality bar (handoff quality).** SKILL.md step 2 gains concrete guidance — the product stands on slice quality, and real transcripts show whole-file dumping: ranges are the **changed hunks** from `git diff HEAD`, never whole files (a fully new file is the one exception); a flow is typically 3–8 steps; a step's `note` says why the change matters to the flow, not what the code is. Include one ❌/✅ example pair (❌ `"ranges": [[1, 612]]` on an edited file → ✅ the actual hunk ranges).
+18. **Range verification step.** Before opening the review, the agent cross-checks every step's ranges against the `git diff HEAD` hunks; any range with no overlap with changed lines must be fixed — it would render a `stale` badge and erode the human's trust in the slice.
+19. **Leftovers discipline.** One line in SKILL.md defining what belongs in Leftovers (lockfiles, generated/build artifacts, pure-docs churn, mechanical renames) and what never does (any hand-written logic).
 
 ### G. Release hygiene (#12)
 
@@ -85,6 +88,7 @@ Implementation is split into **two plans**:
 - DOM virtualization of `FlowStep` (cap covers the failure mode; virtualization is an optimization).
 - Authentication beyond the per-run token (single-user localhost tool).
 - Multi-review concurrency, review resume across runs, opt-out for the checkpoint hook (unchanged from Plan 06).
+- **A structured answer channel for `question` comments.** Today the agent's answers to review questions live only in chat, invisible to the review record — a real product gap, but a v2 design question (it changes the feedback contract), not a hardening fix. Tracked here so it isn't lost.
 
 ## Success criteria
 
@@ -93,4 +97,5 @@ Implementation is split into **two plans**:
 - Abort after a prior successful review in the same directory reports failure, never stale success.
 - A mid-review refresh loses nothing; a harness `SIGTERM` leaves no orphaned server and no zombie temp dir.
 - An agent following the updated skill: runs the review in the background, relays the URL, handles every failure branch without assuming approval, and narrates in one-line steps.
+- Handoffs produced by the updated skill use hunk-level ranges — no whole-file ranges for edited files — and every range overlaps real changed lines.
 - CI is green on the branch, and versions cannot drift silently again.
