@@ -1,6 +1,6 @@
 {
   "name": "hamreview",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "type": "module",
   "description": "Review AI-generated code by the flow of data, not file-by-file — a blocking, human-in-the-loop review for coding agents.",
@@ -62,7 +62,6 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "open": "^10.2.0",
     "tsx": "^4.22.4"
   }
 }
