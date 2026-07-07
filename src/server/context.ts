@@ -48,12 +48,12 @@ export function buildModelFor(handoffPath: string): ReviewModel {
 export function submitFeedback(env: ServerEnv, body: unknown): Feedback {
   const feedback = parseFeedback(body);
   writeFileSync(env.feedbackOut, serializeFeedback(feedback));
-  writeFileSync(env.donePath, "");
+  writeFileSync(env.donePath, "submitted");
   return feedback;
 }
 
 export function submitAbort(env: ServerEnv): void {
-  writeFileSync(env.donePath, "");
+  writeFileSync(env.donePath, "aborted");
 }
 
 function required(env: NodeJS.ProcessEnv, key: string): string {

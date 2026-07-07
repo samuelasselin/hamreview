@@ -9,6 +9,14 @@ import { findFreePort, waitForFile, waitForUrl } from "./server/net";
 import { packageRootFrom } from "./server/paths";
 import { serverSpawnSpec } from "./server/standalone";
 
+function readDoneOutcome(path: string): string {
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return "";
+  }
+}
+
 async function main(): Promise<void> {
   const handoffArg = process.argv[2];
   if (!handoffArg) {
@@ -22,6 +30,9 @@ async function main(): Promise<void> {
 
   const work = mkdtempSync(join(tmpdir(), "hamreview-run-"));
   const feedbackOut = join(process.cwd(), "feedback.json");
+  // A leftover feedback.json from a previous run must never be reported as
+  // this run's result (e.g. abort-after-prior-success).
+  rmSync(feedbackOut, { force: true });
   const donePath = join(work, ".done");
   const port = await findFreePort();
   const token = randomBytes(16).toString("hex");
@@ -72,11 +83,12 @@ async function main(): Promise<void> {
     await open(reviewUrl);
 
     const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
-    if (done && existsSync(feedbackOut)) {
+    const outcome = done ? readDoneOutcome(donePath) : "";
+    if (outcome === "submitted" && existsSync(feedbackOut)) {
       console.log(`feedback written to ${feedbackOut}`);
       process.exit(0);
     }
-    console.error("review was not submitted (browser closed?)");
+    console.error("review was not submitted" + (outcome === "aborted" ? " (aborted in the browser)" : " (browser closed?)"));
     process.exit(1);
   } finally {
     cleanup();

@@ -78,6 +78,7 @@ describe("submitFeedback", () => {
     const result = submitFeedback(env, body);
     expect(result.flows[0].verdict).toBe("approved");
     expect(existsSync(donePath)).toBe(true);
+    expect(readFileSync(donePath, "utf8")).toBe("submitted");
     expect(JSON.parse(readFileSync(feedbackOut, "utf8")).flows[0].id).toBe("f");
   });
 

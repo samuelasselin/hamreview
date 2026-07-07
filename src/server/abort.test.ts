@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { POST } from "../../app/api/abort/route";
@@ -28,6 +28,7 @@ describe("POST /api/abort", () => {
     expect(res.status).toBe(200);
     expect(existsSync(process.env.HAMREVIEW_DONE as string)).toBe(true);
     expect(existsSync(process.env.HAMREVIEW_FEEDBACK_OUT as string)).toBe(false);
+    expect(readFileSync(process.env.HAMREVIEW_DONE as string, "utf8")).toBe("aborted");
   });
 
   it("rejects without the token", async () => {

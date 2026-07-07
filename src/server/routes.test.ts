@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -67,6 +67,7 @@ describe("POST /api/feedback", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(existsSync(process.env.HAMREVIEW_DONE as string)).toBe(true);
+    expect(readFileSync(process.env.HAMREVIEW_DONE as string, "utf8")).toBe("submitted");
   });
 
   it("returns 400 on an invalid body", async () => {
