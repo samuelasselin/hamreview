@@ -33,11 +33,21 @@ Review the code you just wrote WITH the human before building further on it, org
    }
    ```
    `ranges` are 1-indexed inclusive `[start, end]` line ranges in the NEW file. Set `"complete": false` for a flow that is only partially built so far.
-5. **Open the review (this blocks your turn):** run `npx -y hamreview handoff.json` from the repo root. Your turn blocks until the human submits in their browser; then `feedback.json` is written to your current directory (the directory you run it from — the repo root in this workflow).
-6. **Act on the feedback.** Read `feedback.json`:
-   - Per flow `verdict`: `changes-requested` → address its comments before proceeding; `approved` → the human owns this slice.
-   - Per comment `intent`: `must-fix` → make the change; `question` → answer it (and change if warranted); `nit` → optional.
-   - If the CLI exits with "review was not submitted" (the human aborted), STOP and ask the human how to proceed — do NOT assume approval.
+5. **Open the review — in the BACKGROUND (it blocks until the human submits).** From the repo
+   root, run `npx -y hamreview handoff.json` as a background task (your shell tool's
+   background/async mode — a foreground call gets killed by command timeouts long before a
+   real review finishes). The CLI prints the review URL: relay it to the human immediately
+   ("Review open at <URL>") in case their browser did not open. Then wait for the process to
+   exit; read `feedback.json` only after it exits with code 0.
+6. **Act on the outcome.**
+
+   | Outcome | What you do |
+   |---------|-------------|
+   | Exit 0, `feedback.json` present | Read it. Per flow `verdict`: `changes-requested` → address its comments before proceeding; `approved` → the human owns this slice. Per comment `intent`: `must-fix` → make the change; `question` → answer it (and change if warranted); `nit` → optional. Comments with `flowId: "leftovers"` refer to changed files outside every flow — treat them like any other comment. |
+   | "review was not submitted" (aborted) | STOP and ask the human how to proceed. Do NOT assume approval. |
+   | The command is denied/blocked by a permission gate | Ask the human to allowlist it or run it themselves: `npx -y hamreview handoff.json`. Do not retry blindly. |
+   | `HandoffValidationError …` | Fix `handoff.json` per the message and retry ONCE. Still failing → show the human the error and STOP. |
+   | "server did not start in time" or any other error | Report the exact stderr to the human and STOP. Never assume approval; never invent feedback. |
 7. **Re-checkpoint** if your follow-up changes warrant another review.
 
 ## Requirements
