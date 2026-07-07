@@ -35,6 +35,9 @@ export interface FlowView {
 export interface LeftoverView {
   path: string;
   ranges: LineRange[];
+  lines: DisplayLine[];
+  truncatedAbove: boolean;
+  truncatedBelow: boolean;
 }
 
 export interface ReviewModel {
@@ -112,10 +115,16 @@ export function buildReviewModel(handoff: Handoff, diff: Diff, readFile: FileRea
     };
   });
 
-  const leftovers: LeftoverView[] = result.leftovers.map((l: Leftover) => ({
-    path: l.path,
-    ranges: l.ranges,
-  }));
+  const leftovers: LeftoverView[] = result.leftovers.map((l: Leftover) => {
+    const lines = readFile(l.path);
+    const ctx = enclosingContextCapped(lines, hull(l.ranges));
+    const changedForPath = changed.get(l.path) ?? new Set<number>();
+    const displayLines: DisplayLine[] = [];
+    for (let n = ctx.range[0]; n <= ctx.range[1]; n++) {
+      displayLines.push({ number: n, text: lines[n - 1] ?? "", kind: changedForPath.has(n) ? "added" : "context" });
+    }
+    return { path: l.path, ranges: l.ranges, lines: displayLines, truncatedAbove: ctx.truncatedAbove, truncatedBelow: ctx.truncatedBelow };
+  });
 
   return {
     ...(handoff.feature !== undefined ? { feature: handoff.feature } : {}),

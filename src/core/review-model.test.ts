@@ -91,7 +91,42 @@ describe("buildReviewModel", () => {
       flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[3, 3]], role: "model" }] }],
     };
     const d: Diff = { files: [{ path: "a.rb", status: "modified", addedLines: [3, 9] }] };
-    expect(buildReviewModel(h, d, read).leftovers).toEqual([{ path: "a.rb", ranges: [[9, 9]] }]);
+    expect(buildReviewModel(h, d, read).leftovers).toEqual([
+      {
+        path: "a.rb",
+        ranges: [[9, 9]],
+        lines: [
+          { number: 1, text: "class A", kind: "context" },
+          { number: 2, text: "  x", kind: "context" },
+          { number: 3, text: "  y = 1", kind: "added" },
+          { number: 4, text: "end", kind: "context" },
+        ],
+        truncatedAbove: false,
+        truncatedBelow: false,
+      },
+    ]);
+  });
+
+  it("renders leftover lines with change highlighting", () => {
+    // handoff claims only one of two changed files, so the other becomes a whole-file leftover
+    const read: FileReader = (p) =>
+      p === "a.rb" ? ["class A", "  x", "  y = 1", "end"] : ["def method", "  y = 2", "end"];
+    const h: Handoff = {
+      version: 1,
+      root: "/r",
+      base: "working-tree",
+      flows: [{ id: "f", title: "F", steps: [{ path: "a.rb", ranges: [[3, 3]], role: "model" }] }],
+    };
+    const d: Diff = {
+      files: [
+        { path: "a.rb", status: "modified", addedLines: [3] },
+        { path: "b.rb", status: "modified", addedLines: [2] },
+      ],
+    };
+    const leftover = buildReviewModel(h, d, read).leftovers[0];
+    expect(leftover.path).toBe("b.rb");
+    expect(leftover.lines.length).toBeGreaterThan(0);
+    expect(leftover.lines.some((l) => l.kind === "added")).toBe(true);
   });
 
   it("does not collapse non-overlapping ranges in the same file across flows", () => {

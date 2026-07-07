@@ -6,6 +6,8 @@ import {
   removeComment,
   allFlowsDecided,
   toFeedback,
+  canSend,
+  setLeftoversAcked,
 } from "./review-state";
 import type { ReviewModel } from "../../src/core/index";
 
@@ -48,5 +50,28 @@ describe("review-state", () => {
     expect(fb.submittedAt).toBe("2026-07-02T00:00:00.000Z");
     expect(fb.flows).toEqual([{ id: "a", verdict: "changes-requested" }]);
     expect(fb.comments[0].intent).toBe("must-fix");
+  });
+});
+
+describe("leftovers acknowledgment", () => {
+  const modelWithLeftovers = {
+    flows: [{ id: "f", title: "F", partial: false, steps: [] }],
+    leftovers: [{ path: "x.txt", ranges: [[1, 1]], lines: [], truncatedAbove: false, truncatedBelow: false }],
+  } as unknown as ReviewModel;
+  const modelWithout = { flows: [{ id: "f", title: "F", partial: false, steps: [] }], leftovers: [] } as unknown as ReviewModel;
+
+  it("blocks Send until leftovers are acknowledged", () => {
+    const decided = setVerdict(emptyReviewState, "f", "approved");
+    expect(canSend(modelWithLeftovers, decided)).toBe(false);
+    expect(canSend(modelWithLeftovers, setLeftoversAcked(decided, true))).toBe(true);
+  });
+
+  it("does not require acknowledgment when there are no leftovers", () => {
+    const decided = setVerdict(emptyReviewState, "f", "approved");
+    expect(canSend(modelWithout, decided)).toBe(true);
+  });
+
+  it("still requires every flow verdict", () => {
+    expect(canSend(modelWithout, emptyReviewState)).toBe(false);
   });
 });

@@ -5,12 +5,21 @@ import { Button } from "flowbite-react";
 import type { ReviewComment, ReviewModel, Verdict } from "../src/core/index";
 import { FlowRail } from "./components/FlowRail";
 import { FlowStep } from "./components/FlowStep";
-import { addComment, allFlowsDecided, emptyReviewState, setVerdict, toFeedback, type ReviewState } from "./lib/review-state";
+import { LeftoverBlock } from "./components/LeftoverBlock";
+import {
+  addComment,
+  canSend,
+  emptyReviewState,
+  setLeftoversAcked,
+  setVerdict,
+  toFeedback,
+  type ReviewState,
+} from "./lib/review-state";
 
 export default function Home() {
   const [model, setModel] = useState<ReviewModel | null>(null);
   const [state, setState] = useState<ReviewState>(emptyReviewState);
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState<number | "leftovers">(0);
   const [status, setStatus] = useState<"reviewing" | "sent" | "aborted">("reviewing");
   const [error, setError] = useState<string | null>(null);
   const tokenRef = useRef("");
@@ -59,48 +68,92 @@ export default function Home() {
   if (status === "aborted") return <main className="p-8">Review aborted. You can close this tab.</main>;
   if (model.flows.length === 0) return <main className="p-8">No flows to review.</main>;
 
-  const flow = model.flows[current];
-  const decided = allFlowsDecided(model, state);
+  const decided = canSend(model, state);
+  const showingLeftovers = current === "leftovers";
+  const flow = showingLeftovers ? null : model.flows[current as number];
 
   return (
     <div className="flex min-h-screen">
-      <FlowRail model={model} state={state} current={current} onSelect={setCurrent} />
+      <FlowRail
+        model={model}
+        state={state}
+        current={current}
+        onSelect={setCurrent}
+        leftoversSelected={showingLeftovers}
+        onSelectLeftovers={() => setCurrent("leftovers")}
+      />
       <main className="flex-1 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">
-            {flow.title}
-            {flow.partial && <span className="ml-2 text-sm font-normal text-gray-500">(partial — more coming)</span>}
-          </h1>
-          <span className="text-sm text-gray-500">
-            Flow {current + 1} of {model.flows.length}
-          </span>
-        </div>
+        {showingLeftovers ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <h1 className="text-xl font-bold">⚠ Leftovers</h1>
+              <span className="text-sm text-gray-500">changed but not claimed by any flow</span>
+            </div>
+            {model.leftovers.map((l) => (
+              <LeftoverBlock
+                key={l.path}
+                leftover={l}
+                comments={state.comments}
+                onAddComment={(c: ReviewComment) => setState((s) => addComment(s, c))}
+              />
+            ))}
+            <div className="mt-6 border-t border-gray-200 pt-4">
+              <Button
+                color={state.leftoversAcked ? "light" : "green"}
+                onClick={() => setState((s) => setLeftoversAcked(s, !s.leftoversAcked))}
+              >
+                {state.leftoversAcked ? "✓ Leftovers reviewed (click to undo)" : "Mark leftovers as reviewed"}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <h1 className="text-xl font-bold">
+                {flow!.title}
+                {flow!.partial && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">(partial — more coming)</span>
+                )}
+              </h1>
+              <span className="text-sm text-gray-500">
+                Flow {(current as number) + 1} of {model.flows.length}
+              </span>
+            </div>
 
-        {flow.steps.map((step, i) => (
-          <FlowStep
-            key={`${step.path}-${i}`}
-            step={step}
-            flowId={flow.id}
-            comments={state.comments}
-            onAddComment={(c: ReviewComment) => setState((s) => addComment(s, c))}
-          />
-        ))}
+            {flow!.steps.map((step, i) => (
+              <FlowStep
+                key={`${step.path}-${i}`}
+                step={step}
+                flowId={flow!.id}
+                comments={state.comments}
+                onAddComment={(c: ReviewComment) => setState((s) => addComment(s, c))}
+              />
+            ))}
 
-        <div className="mt-6 flex items-center gap-3 border-t border-gray-200 pt-4">
-          <Button color="green" onClick={() => setState((s) => setVerdict(s, flow.id, "approved" as Verdict))}>
-            ✓ Approve
-          </Button>
-          <Button color="yellow" onClick={() => setState((s) => setVerdict(s, flow.id, "changes-requested" as Verdict))}>
-            Request changes
-          </Button>
-          <div className="flex-1" />
-          <Button color="light" disabled={current === 0} onClick={() => setCurrent((c) => c - 1)}>
-            ◀ Prev
-          </Button>
-          <Button color="light" disabled={current === model.flows.length - 1} onClick={() => setCurrent((c) => c + 1)}>
-            Next ▶
-          </Button>
-        </div>
+            <div className="mt-6 flex items-center gap-3 border-t border-gray-200 pt-4">
+              <Button color="green" onClick={() => setState((s) => setVerdict(s, flow!.id, "approved" as Verdict))}>
+                ✓ Approve
+              </Button>
+              <Button
+                color="yellow"
+                onClick={() => setState((s) => setVerdict(s, flow!.id, "changes-requested" as Verdict))}
+              >
+                Request changes
+              </Button>
+              <div className="flex-1" />
+              <Button color="light" disabled={current === 0} onClick={() => setCurrent((c) => (c as number) - 1)}>
+                ◀ Prev
+              </Button>
+              <Button
+                color="light"
+                disabled={current === model.flows.length - 1}
+                onClick={() => setCurrent((c) => (c as number) + 1)}
+              >
+                Next ▶
+              </Button>
+            </div>
+          </>
+        )}
 
         <div className="mt-6 flex gap-3">
           <Button disabled={!decided} onClick={send}>
@@ -110,7 +163,12 @@ export default function Home() {
             Abort review
           </Button>
         </div>
-        {!decided && <p className="mt-2 text-xs text-gray-500">Give every flow a verdict to enable Send.</p>}
+        {!decided && (
+          <p className="mt-2 text-xs text-gray-500">
+            Give every flow a verdict{model.leftovers.length > 0 ? " and mark the leftovers as reviewed" : ""} to
+            enable Send.
+          </p>
+        )}
       </main>
     </div>
   );
