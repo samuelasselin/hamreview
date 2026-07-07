@@ -53,3 +53,29 @@ export function enclosingContext(lines: string[], range: LineRange): LineRange {
 
   return [Math.min(headerLine, s), Math.max(blockEnd, e)];
 }
+
+export const CONTEXT_CAP = 200;
+
+export interface ContextView {
+  range: LineRange;
+  truncatedAbove: boolean;
+  truncatedBelow: boolean;
+}
+
+/**
+ * enclosingContext, but never more than `cap` lines beyond the changed range
+ * on either side — flat/generated files (uniform indent) otherwise expand to
+ * nearly the whole file (audit #9).
+ */
+export function enclosingContextCapped(lines: string[], range: LineRange, cap = CONTEXT_CAP): ContextView {
+  const [start, end] = enclosingContext(lines, range);
+  const s = Math.max(1, range[0]);
+  const e = Math.min(Math.max(lines.length, 1), range[1]);
+  const cappedStart = Math.max(start, s - cap);
+  const cappedEnd = Math.min(end, e + cap);
+  return {
+    range: [cappedStart, cappedEnd],
+    truncatedAbove: cappedStart > start,
+    truncatedBelow: cappedEnd < end,
+  };
+}

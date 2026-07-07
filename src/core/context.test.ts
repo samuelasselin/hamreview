@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { enclosingContext } from "./context";
+import { enclosingContext, enclosingContextCapped } from "./context";
 
 describe("enclosingContext", () => {
   it("expands to the enclosing class in an `end`-delimited language", () => {
@@ -44,5 +44,27 @@ describe("enclosingContext", () => {
     const [s, e] = enclosingContext(lines, [99, 99]);
     expect(s).toBeGreaterThanOrEqual(1);
     expect(e).toBeLessThanOrEqual(lines.length);
+  });
+});
+
+describe("enclosingContextCapped", () => {
+  it("caps a flat 50k-line file to ±200 lines around the change", () => {
+    // Uniform non-zero indent throughout (a "flat/generated" file with no
+    // dedented header/footer): enclosingContext balloons to the whole file
+    // on both sides, so the cap must kick in on both sides too.
+    const lines = Array.from({ length: 50000 }, () => "  x = 1");
+    const view = enclosingContextCapped(lines, [25000, 25000]);
+    expect(view.range[0]).toBe(24800);
+    expect(view.range[1]).toBe(25200);
+    expect(view.truncatedAbove).toBe(true);
+    expect(view.truncatedBelow).toBe(true);
+  });
+
+  it("does not truncate a small enclosing block", () => {
+    const lines = ["function a() {", "  x", "}"];
+    const view = enclosingContextCapped(lines, [2, 2]);
+    expect(view.range).toEqual([1, 3]);
+    expect(view.truncatedAbove).toBe(false);
+    expect(view.truncatedBelow).toBe(false);
   });
 });

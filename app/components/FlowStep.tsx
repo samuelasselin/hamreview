@@ -34,6 +34,9 @@ export function FlowStep({
       </div>
       {!step.collapsed && (
         <div className="text-sm">
+          {step.truncatedAbove && (
+            <div className="bg-gray-50 px-3 py-0.5 text-xs italic text-gray-500">… earlier lines hidden</div>
+          )}
           {step.lines.map((line) => {
             const lineComments = comments.filter((c) => c.path === step.path && c.lines[0] === line.number);
             return (
@@ -69,6 +72,9 @@ export function FlowStep({
               </div>
             );
           })}
+          {step.truncatedBelow && (
+            <div className="bg-gray-50 px-3 py-0.5 text-xs italic text-gray-500">… later lines hidden</div>
+          )}
         </div>
       )}
     </div>

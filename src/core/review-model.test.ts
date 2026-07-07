@@ -136,4 +136,11 @@ describe("buildReviewModel", () => {
     expect(step.stale).toBe(true);
     expect(step.staleRanges).toEqual([[5, 5]]);
   });
+
+  it("exposes truncation flags on steps", () => {
+    const model = buildReviewModel(handoff, diff, readFile);
+    const step = model.flows[0].steps[0];
+    expect(step.truncatedAbove).toBe(false);
+    expect(step.truncatedBelow).toBe(false);
+  });
 });

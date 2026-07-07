@@ -1,7 +1,7 @@
 import type { Handoff, LineRange } from "./types";
 import { changedLinesByPath, type Diff } from "./diff";
 import { reconcile, type Leftover } from "./reconcile";
-import { enclosingContext } from "./context";
+import { enclosingContextCapped } from "./context";
 
 export type LineKind = "added" | "context";
 
@@ -21,6 +21,8 @@ export interface StepView {
   staleRanges: LineRange[];
   collapsed: boolean;
   alreadyReviewedIn?: string;
+  truncatedAbove: boolean;
+  truncatedBelow: boolean;
 }
 
 export interface FlowView {
@@ -67,7 +69,8 @@ export function buildReviewModel(handoff: Handoff, diff: Diff, readFile: FileRea
     const steps: StepView[] = flow.steps.map((step) => {
       const lines = readFile(step.path);
       const span = hull(step.ranges);
-      const display = enclosingContext(lines, span);
+      const ctx = enclosingContextCapped(lines, span);
+      const display = ctx.range;
       const changedForPath = changed.get(step.path) ?? new Set<number>();
 
       const displayLines: DisplayLine[] = [];
@@ -90,6 +93,8 @@ export function buildReviewModel(handoff: Handoff, diff: Diff, readFile: FileRea
         staleRanges: step.staleRanges,
         collapsed: prior !== undefined,
         ...(prior ? { alreadyReviewedIn: prior.flowId } : {}),
+        truncatedAbove: ctx.truncatedAbove,
+        truncatedBelow: ctx.truncatedBelow,
       };
 
       const entries = seen.get(step.path) ?? [];
