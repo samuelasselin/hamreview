@@ -60,6 +60,7 @@ function parseStep(s: unknown, i: number, j: number): HandoffStep {
   if (!isObject(s)) throw new HandoffValidationError(`${where} must be an object`);
   if (typeof s.path !== "string" || s.path.length === 0)
     throw new HandoffValidationError(`${where}.path must be a non-empty string`);
+  assertSafePath(s.path, where);
   if (typeof s.role !== "string" || s.role.length === 0)
     throw new HandoffValidationError(`${where}.role must be a non-empty string`);
   if (s.note !== undefined && typeof s.note !== "string")
@@ -86,6 +87,19 @@ function parseRange(r: unknown, where: string): LineRange {
   if ((end as number) < (start as number))
     throw new HandoffValidationError(`${where} end must be >= start`);
   return [start as number, end as number];
+}
+
+/**
+ * Lexical path safety (core stays Node-free, so no path.resolve here):
+ * a step path must be relative and free of "." / ".." segments. The server
+ * layer re-checks containment with resolve() as defense in depth.
+ */
+function assertSafePath(path: string, where: string): void {
+  if (path.startsWith("/") || path.startsWith("\\") || /^[A-Za-z]:/.test(path))
+    throw new HandoffValidationError(`${where}.path must be relative to root, not absolute`);
+  const segments = path.split(/[/\\]/);
+  if (segments.some((seg) => seg === "." || seg === ".."))
+    throw new HandoffValidationError(`${where}.path must not contain "." or ".." segments`);
 }
 
 function safeJson(s: string): unknown {

@@ -50,3 +50,33 @@ describe("parseHandoff", () => {
     expect(() => parseHandoff("{not json")).toThrow(HandoffValidationError);
   });
 });
+
+describe("step path safety", () => {
+  const handoffWith = (path: string) => ({
+    version: 1,
+    root: "/r",
+    base: "working-tree",
+    flows: [{ id: "f", title: "F", steps: [{ path, ranges: [[1, 1]], role: "x" }] }],
+  });
+
+  it("rejects an absolute path", () => {
+    expect(() => parseHandoff(handoffWith("/etc/passwd"))).toThrow(HandoffValidationError);
+    expect(() => parseHandoff(handoffWith("/etc/passwd"))).toThrow(/relative to root/);
+  });
+
+  it("rejects a Windows-style absolute path", () => {
+    expect(() => parseHandoff(handoffWith("C:\\secrets.txt"))).toThrow(/relative to root/);
+  });
+
+  it("rejects .. traversal segments", () => {
+    expect(() => parseHandoff(handoffWith("../../etc/passwd"))).toThrow(/"\." or "\.\." segments/);
+  });
+
+  it("rejects . segments", () => {
+    expect(() => parseHandoff(handoffWith("./a.txt"))).toThrow(/"\." or "\.\." segments/);
+  });
+
+  it("accepts a normal nested relative path", () => {
+    expect(() => parseHandoff(handoffWith("src/app/x.ts"))).not.toThrow();
+  });
+});

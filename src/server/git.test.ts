@@ -41,3 +41,11 @@ describe("makeFileReader", () => {
     expect(makeFileReader(repo)("nope.txt")).toEqual([]);
   });
 });
+
+describe("makeFileReader containment (defense in depth)", () => {
+  it("refuses to read outside root even if validation is bypassed", () => {
+    expect(makeFileReader(repo)("../outside.txt")).toEqual([]);
+    expect(makeFileReader(repo)("/etc/passwd")).toEqual([]);
+    expect(makeFileReader(repo)("a/../../outside.txt")).toEqual([]);
+  });
+});
