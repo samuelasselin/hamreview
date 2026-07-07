@@ -224,7 +224,7 @@ import { execFileSync } from "node:child_process";
 const HOOK = join(dirname(fileURLToPath(import.meta.url)), "checkpoint.mjs");
 
 function git(repo, args) {
-  execFileSync("git", ["-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", ...args]);
+  execFileSync("git", ["-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false", ...args]);
 }
 
 /** Run the hook with a Stop payload for `cwd`; returns { stdout, status }. */
