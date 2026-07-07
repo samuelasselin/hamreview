@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { readEnv, buildModelFor, submitFeedback } from "./context";
+import { readEnv, buildModelFor, submitFeedback, tokenOk } from "./context";
 
 let repo: string;
 let handoffPath: string;
@@ -68,7 +68,7 @@ describe("submitFeedback", () => {
   it("validates, writes feedback.json, and creates the done signal", () => {
     const feedbackOut = join(repo, "feedback.json");
     const donePath = join(repo, ".done");
-    const env = { handoffPath, feedbackOut, donePath };
+    const env = { handoffPath, feedbackOut, donePath, token: "tkn" };
     const body = {
       version: 1,
       submittedAt: "2026-07-02T00:00:00.000Z",
@@ -82,7 +82,19 @@ describe("submitFeedback", () => {
   });
 
   it("rejects an invalid feedback body", () => {
-    const env = { handoffPath, feedbackOut: join(repo, "f2.json"), donePath: join(repo, ".done2") };
+    const env = { handoffPath, feedbackOut: join(repo, "f2.json"), donePath: join(repo, ".done2"), token: "tkn" };
     expect(() => submitFeedback(env, { version: 1, submittedAt: "t", flows: [], comments: [{ bad: true }] })).toThrow();
+  });
+});
+
+describe("tokenOk", () => {
+  const env = { handoffPath: "h", feedbackOut: "f", donePath: "d", token: "secret42" };
+  it("accepts the exact token", () => {
+    expect(tokenOk(env, "secret42")).toBe(true);
+  });
+  it("rejects a wrong, empty, or missing token", () => {
+    expect(tokenOk(env, "nope")).toBe(false);
+    expect(tokenOk(env, "")).toBe(false);
+    expect(tokenOk(env, null)).toBe(false);
   });
 });

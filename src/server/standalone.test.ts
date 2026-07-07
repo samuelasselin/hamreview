@@ -18,7 +18,8 @@ describe("serverSpawnSpec", () => {
       handoffPath: "/proj/handoff.json",
       feedbackOut: "/proj/feedback.json",
       donePath: "/tmp/run/.done",
-      baseEnv: { PATH: "/usr/bin" },
+      token: "tkn",
+      baseEnv: { PATH: "/usr/bin", NODE_ENV: "test" },
     });
     expect(spec.command).toBe("/usr/bin/node");
     expect(spec.args).toEqual(["/opt/hamreview/.next/standalone/server.js"]);
@@ -27,6 +28,7 @@ describe("serverSpawnSpec", () => {
     expect(spec.env.HAMREVIEW_HANDOFF).toBe("/proj/handoff.json");
     expect(spec.env.HAMREVIEW_FEEDBACK_OUT).toBe("/proj/feedback.json");
     expect(spec.env.HAMREVIEW_DONE).toBe("/tmp/run/.done");
+    expect(spec.env.HAMREVIEW_TOKEN).toBe("tkn");
     expect(spec.env.PATH).toBe("/usr/bin"); // base env preserved
   });
 });

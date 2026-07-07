@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { readEnv, submitFeedback } from "../../../src/server/context";
+import { readEnv, submitFeedback, tokenOk } from "../../../src/server/context";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const env = readEnv(process.env);
+  if (!tokenOk(env, req.headers.get("x-hamreview-token")))
+    return NextResponse.json({ error: "invalid or missing review token" }, { status: 403 });
   let body: unknown;
   try {
     body = await req.json();

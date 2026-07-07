@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { timingSafeEqual } from "node:crypto";
 import {
   parseHandoff,
   parseUnifiedDiff,
@@ -14,13 +15,23 @@ export interface ServerEnv {
   handoffPath: string;
   feedbackOut: string;
   donePath: string;
+  token: string;
 }
 
 export function readEnv(env: NodeJS.ProcessEnv): ServerEnv {
   const handoffPath = required(env, "HAMREVIEW_HANDOFF");
   const feedbackOut = required(env, "HAMREVIEW_FEEDBACK_OUT");
   const donePath = required(env, "HAMREVIEW_DONE");
-  return { handoffPath, feedbackOut, donePath };
+  const token = required(env, "HAMREVIEW_TOKEN");
+  return { handoffPath, feedbackOut, donePath, token };
+}
+
+/** Constant-time check of the per-run review token. */
+export function tokenOk(env: ServerEnv, provided: string | null): boolean {
+  if (provided === null || provided.length === 0) return false;
+  const a = Buffer.from(env.token);
+  const b = Buffer.from(provided);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function buildModelFor(handoffPath: string): ReviewModel {

@@ -44,7 +44,7 @@ describe("contract round-trip", () => {
     const feedbackOut = join(repo, "feedback.json");
     const donePath = join(repo, ".done");
     submitFeedback(
-      { handoffPath, feedbackOut, donePath },
+      { handoffPath, feedbackOut, donePath, token: "tkn" },
       {
         version: 1,
         submittedAt: "2026-07-02T00:00:00.000Z",

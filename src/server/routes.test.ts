@@ -32,6 +32,7 @@ beforeAll(() => {
   process.env.HAMREVIEW_HANDOFF = handoffPath;
   process.env.HAMREVIEW_FEEDBACK_OUT = join(repo, "feedback.json");
   process.env.HAMREVIEW_DONE = join(repo, ".done");
+  process.env.HAMREVIEW_TOKEN = "tkn";
 });
 
 afterAll(() => {
@@ -39,11 +40,12 @@ afterAll(() => {
   delete process.env.HAMREVIEW_HANDOFF;
   delete process.env.HAMREVIEW_FEEDBACK_OUT;
   delete process.env.HAMREVIEW_DONE;
+  delete process.env.HAMREVIEW_TOKEN;
 });
 
 describe("GET /api/review", () => {
   it("returns the review model as JSON", async () => {
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/review", { headers: { "x-hamreview-token": "tkn" } }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.model.flows[0].id).toBe("f");
@@ -54,6 +56,7 @@ describe("POST /api/feedback", () => {
   it("writes feedback and returns ok", async () => {
     const req = new Request("http://localhost/api/feedback", {
       method: "POST",
+      headers: { "x-hamreview-token": "tkn" },
       body: JSON.stringify({
         version: 1,
         submittedAt: "2026-07-02T00:00:00.000Z",
@@ -69,11 +72,27 @@ describe("POST /api/feedback", () => {
   it("returns 400 on an invalid body", async () => {
     const req = new Request("http://localhost/api/feedback", {
       method: "POST",
+      headers: { "x-hamreview-token": "tkn" },
       body: JSON.stringify({ version: 1, submittedAt: "t", flows: [], comments: [{ bad: 1 }] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body).toHaveProperty("error");
+  });
+});
+
+describe("token protection", () => {
+  it("rejects /api/review without the token", async () => {
+    const res = await GET(new Request("http://localhost/api/review"));
+    expect(res.status).toBe(403);
+  });
+  it("rejects /api/feedback with a wrong token", async () => {
+    const req = new Request("http://localhost/api/feedback", {
+      method: "POST",
+      headers: { "x-hamreview-token": "wrong" },
+      body: JSON.stringify({ version: 1, submittedAt: "t", flows: [], comments: [] }),
+    });
+    expect((await POST(req)).status).toBe(403);
   });
 });

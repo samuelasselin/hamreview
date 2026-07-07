@@ -23,6 +23,7 @@ export function serverSpawnSpec(opts: {
   handoffPath: string;
   feedbackOut: string;
   donePath: string;
+  token: string;
   baseEnv: NodeJS.ProcessEnv;
 }): ServerSpawnSpec {
   return {
@@ -35,6 +36,7 @@ export function serverSpawnSpec(opts: {
       HAMREVIEW_HANDOFF: opts.handoffPath,
       HAMREVIEW_FEEDBACK_OUT: opts.feedbackOut,
       HAMREVIEW_DONE: opts.donePath,
+      HAMREVIEW_TOKEN: opts.token,
     },
   };
 }

@@ -12,6 +12,7 @@ beforeAll(() => {
   process.env.HAMREVIEW_HANDOFF = join(dir, "handoff.json");
   process.env.HAMREVIEW_FEEDBACK_OUT = join(dir, "feedback.json");
   process.env.HAMREVIEW_DONE = join(dir, ".done");
+  process.env.HAMREVIEW_TOKEN = "tkn";
 });
 
 afterAll(() => {
@@ -19,6 +20,7 @@ afterAll(() => {
   delete process.env.HAMREVIEW_HANDOFF;
   delete process.env.HAMREVIEW_FEEDBACK_OUT;
   delete process.env.HAMREVIEW_DONE;
+  delete process.env.HAMREVIEW_TOKEN;
 });
 
 describe("feedback contract round-trip through the route", () => {
@@ -31,7 +33,13 @@ describe("feedback contract round-trip through the route", () => {
         { flowId: "create-booking", path: "app/models/booking.rb", lines: [14, 14], intent: "must-fix", text: "guard nil" },
       ],
     };
-    const res = await POST(new Request("http://localhost/api/feedback", { method: "POST", body: JSON.stringify(payload) }));
+    const res = await POST(
+      new Request("http://localhost/api/feedback", {
+        method: "POST",
+        headers: { "x-hamreview-token": "tkn" },
+        body: JSON.stringify(payload),
+      }),
+    );
     expect(res.status).toBe(200);
 
     const written = parseFeedback(readFileSync(process.env.HAMREVIEW_FEEDBACK_OUT as string, "utf8"));

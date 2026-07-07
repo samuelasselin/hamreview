@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "flowbite-react";
 import type { ReviewComment, ReviewModel, Verdict } from "../src/core/index";
 import { FlowRail } from "./components/FlowRail";
@@ -13,9 +13,11 @@ export default function Home() {
   const [current, setCurrent] = useState(0);
   const [status, setStatus] = useState<"reviewing" | "sent" | "aborted">("reviewing");
   const [error, setError] = useState<string | null>(null);
+  const tokenRef = useRef("");
 
   useEffect(() => {
-    fetch("/api/review")
+    tokenRef.current = new URLSearchParams(window.location.search).get("token") ?? "";
+    fetch("/api/review", { headers: { "x-hamreview-token": tokenRef.current } })
       .then((r) => {
         if (!r.ok) throw new Error(`review request failed (${r.status})`);
         return r.json();
@@ -28,6 +30,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
+        headers: { "x-hamreview-token": tokenRef.current },
         body: JSON.stringify(toFeedback(state, new Date().toISOString())),
       });
       if (res.ok) setStatus("sent");
@@ -39,7 +42,7 @@ export default function Home() {
 
   async function abort() {
     try {
-      const res = await fetch("/api/abort", { method: "POST" });
+      const res = await fetch("/api/abort", { method: "POST", headers: { "x-hamreview-token": tokenRef.current } });
       if (res.ok) setStatus("aborted");
       else setError("Failed to abort.");
     } catch {

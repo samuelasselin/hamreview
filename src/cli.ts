@@ -1,6 +1,7 @@
 import { readFileSync, rmSync, existsSync, mkdtempSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import open from "open";
 import { parseHandoff } from "./core/index";
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
   const feedbackOut = join(process.cwd(), "feedback.json");
   const donePath = join(work, ".done");
   const port = await findFreePort();
+  const token = randomBytes(16).toString("hex");
 
   const packageRoot = packageRootFrom(import.meta.url);
   const spec = serverSpawnSpec({
@@ -32,6 +34,7 @@ async function main(): Promise<void> {
     handoffPath,
     feedbackOut,
     donePath,
+    token,
     baseEnv: process.env,
   });
   const server = spawn(spec.command, spec.args, {
@@ -64,8 +67,9 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log(`HamReview open at ${url} — review, then submit in the browser (Ctrl-C to abort).`);
-    await open(url);
+    const reviewUrl = `${url}/?token=${token}`;
+    console.log(`HamReview open at ${reviewUrl} — review, then submit in the browser (Ctrl-C to abort).`);
+    await open(reviewUrl);
 
     const done = await waitForFile(donePath, 60 * 60 * 1000); // block up to 1h
     if (done && existsSync(feedbackOut)) {
