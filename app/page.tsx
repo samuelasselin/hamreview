@@ -44,8 +44,12 @@ export default function Home() {
 
   // Restore any in-progress state (survives refresh; new runs get a new origin).
   useEffect(() => {
-    const restored = deserializeState(sessionStorage.getItem(STORAGE_KEY));
-    if (restored) setState(restored);
+    try {
+      const restored = deserializeState(sessionStorage.getItem(STORAGE_KEY));
+      if (restored) setState(restored);
+    } catch {
+      // storage blocked/unavailable — degrade to in-memory only
+    }
   }, []);
 
   // Autosave on every change.
