@@ -1,6 +1,6 @@
 ---
 name: ham-review
-description: Use at a checkpoint after writing a coherent slice of a feature (or when the human asks) to review it by data-flow slices — group your uncommitted changes into flows, open a blocking browser review for the human, and act on their line-level feedback before continuing.
+description: Use right after implementing a coherent feature or data-flow — a new or changed endpoint, use-case, component, or migration and its supporting layers — before committing or starting the next task; or whenever the human asks. Reviews the change WITH the human, grouped by the flow of data.
 ---
 
 # HamReview
