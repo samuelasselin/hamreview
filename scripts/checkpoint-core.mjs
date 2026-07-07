@@ -18,6 +18,19 @@ export function parseStatus(porcelainZ) {
   return entries;
 }
 
+// The ham-review skill's own workflow writes these two contract files at the
+// repo root of the TARGET repo it is reviewing (handoff.json as input,
+// feedback.json as output). They are untracked there, so right after a
+// review completes they'd otherwise flip the signature and re-trigger the
+// checkpoint on the very files the skill itself produced. Filter them out
+// by exact root path only — a nested `sub/handoff.json` is a real user file.
+const ARTIFACT_PATHS = new Set(["handoff.json", "feedback.json"]);
+
+/** Drop the ham-review skill's own contract files (repo-root exact match only). */
+export function filterArtifacts(entries) {
+  return entries.filter((e) => !ARTIFACT_PATHS.has(e.path));
+}
+
 /** Deterministic, order-independent signature of the working-tree changes. */
 export function computeSignature(pairs) {
   const body = [...pairs]

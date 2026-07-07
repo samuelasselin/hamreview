@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseStatus, computeSignature, decide, summarizeStatus, buildReason } from "./checkpoint-core.mjs";
+import { parseStatus, filterArtifacts, computeSignature, decide, summarizeStatus, buildReason } from "./checkpoint-core.mjs";
 
 describe("parseStatus", () => {
   it("returns [] for empty input", () => {
@@ -21,6 +21,30 @@ describe("parseStatus", () => {
       { status: "R ", path: "new.txt" },
       { status: "M ", path: "other.txt" },
     ]);
+  });
+});
+
+describe("filterArtifacts", () => {
+  it("filters the ham-review skill's own root-level contract files", () => {
+    const entries = [
+      { status: "??", path: "handoff.json" },
+      { status: "??", path: "feedback.json" },
+      { status: "M ", path: "a.txt" },
+    ];
+    expect(filterArtifacts(entries)).toEqual([{ status: "M ", path: "a.txt" }]);
+  });
+
+  it("keeps nested paths with the same basename", () => {
+    const entries = [
+      { status: "??", path: "sub/handoff.json" },
+      { status: "??", path: "nested/dir/feedback.json" },
+    ];
+    expect(filterArtifacts(entries)).toEqual(entries);
+  });
+
+  it("keeps everything else untouched", () => {
+    const entries = [{ status: "M ", path: "a.txt" }, { status: "??", path: "b.txt" }];
+    expect(filterArtifacts(entries)).toEqual(entries);
   });
 });
 

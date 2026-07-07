@@ -9,10 +9,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseStatus, computeSignature, decide, summarizeStatus, buildReason } from "./checkpoint-core.mjs";
-
-const ADDITIONAL_CONTEXT =
-  "Injected by the hamreview plugin Stop hook; it fires once per distinct working-tree state.";
+import { parseStatus, filterArtifacts, computeSignature, decide, summarizeStatus, buildReason } from "./checkpoint-core.mjs";
 
 /** Print nothing and exit 0 — the "allow the stop" decision. */
 function allow() {
@@ -27,6 +24,9 @@ function git(cwd, args) {
   });
 }
 
+// Returns "" for anything unreadable as a plain file — including a submodule
+// entry, where `path` is a directory, not a file; submodule-only changes
+// therefore share the "" marker and never re-ask. Known, accepted.
 function shaOfWorkingFile(cwd, path) {
   try {
     return createHash("sha256").update(readFileSync(join(cwd, path))).digest("hex");
@@ -53,7 +53,7 @@ function main() {
 
   let entries;
   try {
-    entries = parseStatus(git(cwd, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]));
+    entries = filterArtifacts(parseStatus(git(cwd, ["status", "--porcelain=v1", "-z", "--untracked-files=all"])));
   } catch {
     return allow();
   }
@@ -85,7 +85,6 @@ function main() {
     JSON.stringify({
       decision: "block",
       reason: buildReason(summarizeStatus(entries)),
-      additionalContext: ADDITIONAL_CONTEXT,
     }),
   );
   process.exit(0);
