@@ -8,7 +8,7 @@ import { getWorkingDiff, makeFileReader } from "./git";
 let repo: string;
 
 function git(args: string[]): void {
-  execFileSync("git", ["-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", ...args]);
+  execFileSync("git", ["-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false", ...args]);
 }
 
 beforeAll(() => {
