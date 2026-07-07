@@ -343,7 +343,7 @@ function shaOfWorkingFile(cwd, path) {
   try {
     return createHash("sha256").update(readFileSync(join(cwd, path))).digest("hex");
   } catch {
-    return " deleted"; // absent in the working tree (deletion)
+    return ""; // unreadable/absent in the working tree — a marker no real sha can collide with
   }
 }
 

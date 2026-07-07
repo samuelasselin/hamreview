@@ -40,11 +40,9 @@ You will not be asked again about this exact set of changes.
 - **Intelligent judgment** stays with the agent — it decides "complete feature or not," not a heuristic. This is what makes it fire at *genuine* moments.
 - The hook stays intentionally **permissive** about *what* counts as work; relevance/completeness filtering (docs-only, trivial, half-written) is the agent's job, guided by the prompt.
 
-`additionalContext` carries a one-line note that this checkpoint is injected by the hamreview plugin and fires once per distinct working-tree state.
-
 ### 2. Anti-nag via a staging-invariant work signature
 
-To avoid asking twice about the same changes (and to avoid infinite stop-loops, since `stop_hook_active` is **not** documented in the current hook contract and is not relied upon):
+To avoid asking twice about the same changes (and to avoid infinite stop-loops), the design deliberately does not rely on `stop_hook_active` — it is documented in the current hooks reference, but it only distinguishes consecutive stops within a loop. The signature guard below is stronger: it holds across turns and across arbitrarily many distinct working-tree states, not just consecutive stops.
 
 - The hook computes a **work signature**: a hash over the set of changed paths (from `git status --porcelain`, covering staged, unstaged, and untracked) plus each path's current **working-tree content** (or a deletion marker for removed files). This is **staging-invariant** — `ham-review`'s own `git add -A` (step 1 of the skill) must not change the signature — and content-sensitive (new edits change it).
 - State is stored **inside the repo's git dir** at `$(git rev-parse --git-dir)/hamreview-state.json` (`{ "lastAskedSignature": "…" }`). Using `.git/` keeps the working tree clean and needs no `.gitignore` entry; it is per-repo and disappears with the repo.
