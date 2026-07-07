@@ -18,12 +18,15 @@ export default function Home() {
   useEffect(() => {
     tokenRef.current = new URLSearchParams(window.location.search).get("token") ?? "";
     fetch("/api/review", { headers: { "x-hamreview-token": tokenRef.current } })
-      .then((r) => {
-        if (!r.ok) throw new Error(`review request failed (${r.status})`);
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => null);
+          throw new Error(body && typeof body.error === "string" ? body.error : `review request failed (${r.status})`);
+        }
         return r.json();
       })
       .then((d) => setModel(d.model))
-      .catch(() => setError("Failed to load the review."));
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load the review."));
   }, []);
 
   async function send() {

@@ -97,3 +97,43 @@ describe("token protection", () => {
     expect((await POST(req)).status).toBe(403);
   });
 });
+
+describe("GET /api/review error paths", () => {
+  it("returns 500 + an actionable error for a nonexistent root", async () => {
+    const bad = join(repo, "handoff-badroot.json");
+    writeFileSync(
+      bad,
+      JSON.stringify({
+        version: 1,
+        root: join(repo, "does-not-exist"),
+        base: "working-tree",
+        flows: [{ id: "f", title: "F", steps: [{ path: "a.txt", ranges: [[1, 1]], role: "x" }] }],
+      }),
+    );
+    const prev = process.env.HAMREVIEW_HANDOFF;
+    process.env.HAMREVIEW_HANDOFF = bad;
+    try {
+      const res = await GET(new Request("http://localhost/api/review", { headers: { "x-hamreview-token": "tkn" } }));
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(typeof body.error).toBe("string");
+      expect(body.error.length).toBeGreaterThan(0);
+    } finally {
+      process.env.HAMREVIEW_HANDOFF = prev;
+    }
+  });
+
+  it("returns 400 for an invalid handoff", async () => {
+    const bad = join(repo, "handoff-invalid.json");
+    writeFileSync(bad, JSON.stringify({ version: 2 }));
+    const prev = process.env.HAMREVIEW_HANDOFF;
+    process.env.HAMREVIEW_HANDOFF = bad;
+    try {
+      const res = await GET(new Request("http://localhost/api/review", { headers: { "x-hamreview-token": "tkn" } }));
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toMatch(/version/);
+    } finally {
+      process.env.HAMREVIEW_HANDOFF = prev;
+    }
+  });
+});
