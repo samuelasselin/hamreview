@@ -92,5 +92,6 @@ describe("buildReason", () => {
     expect(r).toContain("M a.txt");
     expect(r).toContain("If YES");
     expect(r).toContain("If NO");
+    expect(r).toContain("in the background");
   });
 });

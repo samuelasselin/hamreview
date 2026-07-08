@@ -66,6 +66,21 @@ Review the code you just wrote WITH the human before building further on it, org
    | "server did not start in time" or any other error | Report the exact stderr to the human and STOP. Never assume approval; never invent feedback. |
 8. **Re-checkpoint** if your follow-up changes warrant another review.
 
+## Narration
+
+Narrate each step as one short line: the action + the one detail that matters. The human
+should be able to scan the margin and watch the review take shape. Match the human's language.
+
+Line shape — `<verb> <the specific>`:
+- "Staging changes."
+- "Grouping into 3 flows."
+- "Writing handoff.json — one flow (the red night), rest → Leftovers."
+- "Opening the review in the background — URL relayed, waiting on your submit."
+
+❌ "I have the exact lines. I'll create the flow targeting the red change (the rest goes to
+Leftovers). I stage (required by the skill — already staged anyway) and write handoff.json."
+✅ "Lines confirmed. One flow = the red change, rest → Leftovers. handoff.json written."
+
 ## Requirements
 - Node.js ≥ 20 must be installed (`node --version`). The CLI is fetched and run via `npx -y hamreview` — no manual install needed.
 - If `git diff` is empty, there is nothing to review — say so and do not open the tool.

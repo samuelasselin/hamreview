@@ -62,7 +62,7 @@ export function buildReason(summary) {
     "Before you stop, decide whether these form a COMPLETE, reviewable unit — a coherent",
     "feature or data-flow (e.g. an endpoint / use-case / component with its supporting",
     "layers), not a half-written change, a trivial tweak, or pure config/docs.",
-    "  • If YES → invoke the ham-review skill now.",
+    "  • If YES → invoke the ham-review skill now (run its CLI in the background — it blocks until the human submits).",
     "  • If NO  → say in one line why it's not review-ready yet, then stop.",
     "",
     "You will not be asked again about this exact set of changes.",
