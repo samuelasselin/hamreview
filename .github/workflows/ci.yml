@@ -13,7 +13,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
       - run: npm run typecheck
       - run: npm run typecheck:core
       - name: version sync (package.json ↔ plugin.json)
@@ -27,5 +26,8 @@ jobs:
             }
             console.log(`versions in sync: ${pkg}`);
           '
+      # Build BEFORE test: the lifecycle e2e test boots the real standalone
+      # server (.next/standalone/server.js), which only exists after a build.
       - run: npm run build
+      - run: npm test
       - run: npm pack --dry-run
