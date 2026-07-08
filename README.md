@@ -1,5 +1,7 @@
 # HamReview
 
+![CI](https://github.com/samuelasselin/hamreview/actions/workflows/ci.yml/badge.svg)
+
 **Review AI-generated code by the flow of data, not file-by-file.**
 
 When a coding agent produces a whole feature at once, HamReview shows it to you as
@@ -53,6 +55,9 @@ This gives you:
   reads `feedback.json` and acts on each comment (by intent) and each flow's verdict.
 - **`/ham-review` command** — run it yourself to demand a review of the agent's current
   changes on the spot.
+- **Checkpoint hook** — when the agent finishes a coherent chunk of work, the plugin
+  prompts it to offer you a review at that exact moment (once per distinct set of
+  changes). You don't have to remember to ask.
 
 In a session where the agent has made changes, the agent runs the skill (or you run
 `/ham-review`) and the browser loop opens — `npx` fetches the CLI on first use and caches
@@ -67,13 +72,16 @@ Every changed file is accounted for — grouped into a flow, or surfaced in the
 
 - **Focus mode** — one flow fills the screen; a **progress rail** lists every flow (with
   your verdict marks) plus the Leftovers bucket. Advance flow-by-flow.
-- **Steps** show each change inside its enclosing function/class; shared code touched by
-  an earlier flow is collapsed and marked *"already reviewed in …"*; a **stale** badge
-  flags handoff lines git didn't actually change; a **partial** badge marks an
-  in-progress slice.
+- **Steps** show each change inside its enclosing function/class (very long context is
+  capped, with "… lines hidden" markers); shared code touched by an earlier flow is
+  collapsed and marked *"already reviewed in …"*; a **stale** badge flags handoff lines
+  git didn't actually change; a **partial** badge marks an in-progress slice.
+- **⚠ Leftovers** — changed files no flow claimed. Open them, read them, comment on
+  them like any step, then mark them reviewed.
 - **Comments** attach to exact lines and carry an intent (must-fix / question / nit).
-- **Per-slice verdict** (Approve / Request changes) — **Send** is enabled once every flow
-  has a verdict.
+- **Per-slice verdict** (Approve / Request changes) — **Send** unlocks once every flow
+  has a verdict **and** the Leftovers (if any) are marked reviewed.
+- **Refresh-safe** — your comments and verdicts survive a page reload.
 
 ---
 
@@ -86,7 +94,8 @@ HamReview's only interface is two JSON files, so any agent can drive it:
   `{ path, ranges:[[start,end],…], role, note? }`.
 - **`feedback.json`** (out): `{ version:1, submittedAt, flows:[{id, verdict}],
   comments:[{flowId, path, lines:[start,end], intent, text}] }`.
-  `intent` ∈ `must-fix | question | nit`; `verdict` ∈ `approved | changes-requested`.
+  `intent` ∈ `must-fix | question | nit`; `verdict` ∈ `approved | changes-requested`;
+  a comment's `flowId` is the flow it belongs to, or `"leftovers"` for unclaimed files.
 
 Full design: `docs/superpowers/specs/`.
 
@@ -102,6 +111,10 @@ Full design: `docs/superpowers/specs/`.
   ignores untracked files. Run `git add -A` first (the agent skill does this automatically).
 - **"server did not start in time" / blank page** — try again; if it persists, reinstall
   with `npm i -g hamreview` (or clear the `npx` cache with `npx clear-npx-cache`) and retry.
+- **No browser opened** (SSH, container, headless) — the run continues; the CLI prints
+  the review URL. Open it manually in a browser on the same machine.
+- **Accidentally refreshed the page** — nothing is lost; your comments and verdicts are
+  restored automatically.
 - **Wrong Node version errors** — you need Node ≥ 20 (`nvm use 24`).
 - **Nothing happens / it seems stuck** — that's the point: the CLI **blocks** until you
   submit or abort in the browser tab it opened.
