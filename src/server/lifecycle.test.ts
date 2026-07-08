@@ -128,4 +128,28 @@ describe("cli lifecycle", () => {
     },
     45000,
   );
+
+  it("prints the error class name for a bad handoff, so the skill's failure marker matches reality", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "hamreview-badhandoff-cwd-"));
+    try {
+      const handoffPath = join(cwd, "handoff.json");
+      writeFileSync(handoffPath, JSON.stringify({ version: 2 }));
+
+      let threw = false;
+      try {
+        execFileSync(process.execPath, [tsxCli, cliPath, handoffPath], {
+          cwd,
+          env: { ...process.env, PATH: "/hamreview-test-no-such-path" },
+        });
+      } catch (e) {
+        threw = true;
+        const err = e as { status: number | null; stderr: Buffer };
+        expect(err.status).not.toBe(0);
+        expect(err.stderr.toString()).toContain("HandoffValidationError");
+      }
+      expect(threw).toBe(true);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
 });

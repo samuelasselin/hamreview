@@ -103,6 +103,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
+  if (e instanceof Error) {
+    console.error(e.name && e.name !== "Error" ? `${e.name}: ${e.message}` : e.message);
+  } else {
+    console.error(e);
+  }
   process.exit(1);
 });

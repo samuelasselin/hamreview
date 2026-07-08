@@ -49,7 +49,7 @@ This gives you:
 
 - **`ham-review` skill** — the agent invokes it at a checkpoint after writing a feature:
   it stages its changes, groups them into data-flow slices, writes `handoff.json`, runs
-  `npx -y hamreview handoff.json` (which **blocks the agent** until you submit), then
+  `npx -y hamreview handoff.json` in the background (it **blocks** until you submit), then
   reads `feedback.json` and acts on each comment (by intent) and each flow's verdict.
 - **`/ham-review` command** — run it yourself to demand a review of the agent's current
   changes on the spot.
