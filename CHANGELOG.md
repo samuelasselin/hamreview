@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — 2026-07-08
+
+### Fixed
+- CI builds the standalone server before running tests so the lifecycle end-to-end test can start it.
+
 ## 1.0.1 — 2026-07-07
 
 ### Security
