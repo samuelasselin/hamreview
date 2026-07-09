@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — 2026-07-08
+
+### Added
+- Commit-gate PreToolUse hook (soft): the first `git commit` of un-reviewed changes is
+  denied with a prompt to run ham-review first; the retried commit goes through. Asks
+  at most once per exact working-tree state, fails open on every error path.
+
+### Fixed
+- The Stop checkpoint hook now merges into the shared state file instead of
+  overwriting it, so the two hooks no longer erase each other's anti-nag memory.
+
 ## 1.0.2 — 2026-07-08
 
 ### Fixed
