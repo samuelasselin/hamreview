@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseStatus, filterArtifacts, computeSignature, decide, summarizeStatus, buildReason } from "./checkpoint-core.mjs";
+import { parseStatus, filterArtifacts, computeSignature, decide, summarizeStatus, buildReason, matchGitCommit, buildCommitGateReason } from "./checkpoint-core.mjs";
 
 describe("parseStatus", () => {
   it("returns [] for empty input", () => {
@@ -93,5 +93,50 @@ describe("buildReason", () => {
     expect(r).toContain("If YES");
     expect(r).toContain("If NO");
     expect(r).toContain("in the background");
+  });
+});
+
+describe("matchGitCommit", () => {
+  it("matches a plain git commit", () => {
+    expect(matchGitCommit('git commit -m "add feature"')).toEqual({ chdir: null });
+  });
+
+  it("matches a commit chained after other commands", () => {
+    expect(matchGitCommit('git add -A && git commit -m "x"')).toEqual({ chdir: null });
+  });
+
+  it("captures the -C target directory", () => {
+    expect(matchGitCommit('git -C sub/repo commit -m "x"')).toEqual({ chdir: "sub/repo" });
+  });
+
+  it("skips -c config pairs before the subcommand", () => {
+    expect(matchGitCommit('git -c user.name=t commit -m "x"')).toEqual({ chdir: null });
+  });
+
+  it("matches --amend commits", () => {
+    expect(matchGitCommit("git commit --amend --no-edit")).toEqual({ chdir: null });
+  });
+
+  it("does not match other git subcommands", () => {
+    expect(matchGitCommit("git status")).toBeNull();
+    expect(matchGitCommit("git log --oneline")).toBeNull();
+    expect(matchGitCommit("git merge --no-commit topic")).toBeNull();
+    expect(matchGitCommit('git stash push -m "commit later"')).toBeNull();
+  });
+
+  it("does not match commands without git", () => {
+    expect(matchGitCommit("npm test")).toBeNull();
+    expect(matchGitCommit("")).toBeNull();
+  });
+});
+
+describe("buildCommitGateReason", () => {
+  it("embeds the summary, the skill, and the soft-retry escape hatch", () => {
+    const r = buildCommitGateReason("M a.txt");
+    expect(r).toContain("ham-review commit gate");
+    expect(r).toContain("M a.txt");
+    expect(r).toContain("ham-review skill");
+    expect(r).toContain("in the background");
+    expect(r).toContain("re-run the same commit");
   });
 });

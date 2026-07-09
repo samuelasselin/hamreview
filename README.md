@@ -55,9 +55,13 @@ This gives you:
   reads `feedback.json` and acts on each comment (by intent) and each flow's verdict.
 - **`/ham-review` command** — run it yourself to demand a review of the agent's current
   changes on the spot.
-- **Checkpoint hook** — when the agent finishes a coherent chunk of work, the plugin
-  prompts it to offer you a review at that exact moment (once per distinct set of
-  changes). You don't have to remember to ask.
+- **Commit gate (soft)** — the moment the agent tries to `git commit` changes you
+  haven't reviewed, the commit is held back once and the agent is told to open a
+  ham-review first. If you already reviewed (or told it to skip), the retried commit
+  goes straight through — the gate asks at most once per distinct set of changes.
+- **Checkpoint hook** — when the agent ends a turn leaving a coherent chunk of work
+  uncommitted, the plugin prompts it to offer you a review at that exact moment (once
+  per distinct set of changes). You don't have to remember to ask.
 
 In a session where the agent has made changes, the agent runs the skill (or you run
 `/ham-review`) and the browser loop opens — `npx` fetches the CLI on first use and caches

@@ -53,6 +53,57 @@ export function summarizeStatus(entries) {
   return shown.join(", ") + (extra > 0 ? ` (+${extra} more)` : "");
 }
 
+/**
+ * Detect a `git commit` invocation inside a shell command line.
+ * Token-based: finds a `git` token, skips git's global options (-C <dir>,
+ * -c <k=v>, --git-dir/--work-tree/--exec-path and other flags), and checks
+ * whether the subcommand is `commit`. Returns `{ chdir }` (the -C target, or
+ * null) on a match, or null. Quoted text defeats the tokenizer both ways —
+ * acceptable: false negatives fail open, false positives cost one soft ask.
+ */
+export function matchGitCommit(command) {
+  if (typeof command !== "string") return null;
+  const tokens = command.split(/\s+/).filter(Boolean);
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] !== "git") continue;
+    let chdir = null;
+    let j = i + 1;
+    while (j < tokens.length) {
+      const t = tokens[j];
+      if (t === "-C") {
+        chdir = tokens[j + 1] ?? null;
+        j += 2;
+      } else if (t === "-c") {
+        j += 2;
+      } else if (/^--(git-dir|work-tree|exec-path)/.test(t)) {
+        j += t.includes("=") ? 1 : 2;
+      } else if (t.startsWith("-")) {
+        j += 1;
+      } else {
+        break;
+      }
+    }
+    if (tokens[j] === "commit") return { chdir };
+  }
+  return null;
+}
+
+/** The instruction injected when the commit gate denies a `git commit`. */
+export function buildCommitGateReason(summary) {
+  return [
+    "⚠ ham-review commit gate — you're about to commit changes the human has NOT reviewed:",
+    `  ${summary}`,
+    "",
+    "If these changes form a coherent, reviewable unit the human should see, invoke the",
+    "ham-review skill FIRST (run its CLI in the background — it blocks until the human",
+    "submits), address the feedback, then commit.",
+    "",
+    "If the human already reviewed exactly these changes, or explicitly told you to",
+    "commit without a review, re-run the same commit — this gate asks at most once per",
+    "exact set of changes, so the retry will go through.",
+  ].join("\n");
+}
+
 /** The instruction injected into the agent's context on a checkpoint. */
 export function buildReason(summary) {
   return [

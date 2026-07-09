@@ -64,19 +64,21 @@ function main() {
   );
 
   const statePath = join(gitDir, "hamreview-state.json");
-  let lastAsked = "";
+  // The state file is shared with the commit-gate hook — always read the whole
+  // object and merge on write, so neither hook erases the other's memory.
+  let state = {};
   try {
-    lastAsked = JSON.parse(readFileSync(statePath, "utf8")).lastAskedSignature ?? "";
+    state = JSON.parse(readFileSync(statePath, "utf8")) ?? {};
   } catch {
-    lastAsked = "";
+    state = {};
   }
 
-  if (!decide(signature, lastAsked)) return allow();
+  if (!decide(signature, state.lastAskedSignature ?? "")) return allow();
 
   // Persist BEFORE asking. If the ask can't be recorded, allow — an unrecorded
   // block would re-fire every turn (an unbreakable loop).
   try {
-    writeFileSync(statePath, JSON.stringify({ lastAskedSignature: signature }));
+    writeFileSync(statePath, JSON.stringify({ ...state, lastAskedSignature: signature }));
   } catch {
     return allow();
   }
